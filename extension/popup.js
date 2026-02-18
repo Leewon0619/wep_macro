@@ -1,30 +1,8 @@
 const $ = (id) => document.getElementById(id);
+const status = $('status');
 
-const el = {
-  run: $('run'),
-  stop: $('stop'),
-  recStart: $('recStart'),
-  recStop: $('recStop'),
-  macroJson: $('macroJson'),
-  allowlist: $('allowlist'),
-  status: $('status')
-};
-
-function setStatus(text) {
-  el.status.textContent = text;
-}
-
-function getDefaultMacro() {
-  return {
-    id: 'popup-macro',
-    name: 'Popup Macro',
-    repeatCnt: 1,
-    items: [
-      { id: 'none', type: 'NONE' },
-      { id: 's1', type: 'CLICK', selector: 'button' },
-      { id: 's2', type: 'WAIT', ms: 300 }
-    ]
-  };
+function uid(prefix = 'req') {
+  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
 async function activeTabId() {
@@ -32,44 +10,27 @@ async function activeTabId() {
   return tab?.id;
 }
 
-el.run.addEventListener('click', async () => {
-  try {
-    const tabId = await activeTabId();
-    if (!tabId) return;
-
-    let macro = getDefaultMacro();
-    if (el.macroJson.value.trim()) macro = JSON.parse(el.macroJson.value);
-
-    const allowlist = el.allowlist.value.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
-    const res = await chrome.runtime.sendMessage({ type: 'BG_START_RUN', tabId, macro, allowlist });
-    setStatus(res?.ok ? 'run started' : `run fail: ${res?.error || 'unknown'}`);
-  } catch (error) {
-    setStatus(`error: ${error.message}`);
-  }
+$('ping').addEventListener('click', async () => {
+  const res = await chrome.runtime.sendMessage({
+    type: 'EXT_PING_REQ',
+    requestId: uid(),
+    source: 'WEBAPP',
+    target: 'BG',
+    timestamp: Date.now(),
+    payload: {}
+  });
+  status.textContent = JSON.stringify(res, null, 2);
 });
 
-el.stop.addEventListener('click', async () => {
+$('stopAll').addEventListener('click', async () => {
   const tabId = await activeTabId();
-  const res = await chrome.runtime.sendMessage({ type: 'BG_STOP_RUN', tabId });
-  setStatus(res?.ok ? 'stop requested' : `stop fail: ${res?.error || 'unknown'}`);
-});
-
-el.recStart.addEventListener('click', async () => {
-  const tabId = await activeTabId();
-  const res = await chrome.runtime.sendMessage({ type: 'BG_REC_START', tabId });
-  setStatus(res?.ok ? 'rec start' : `rec start fail: ${res?.error || 'unknown'}`);
-});
-
-el.recStop.addEventListener('click', async () => {
-  const tabId = await activeTabId();
-  const res = await chrome.runtime.sendMessage({ type: 'BG_REC_STOP', tabId });
-  if (res?.ok && res.steps) {
-    el.macroJson.value = JSON.stringify({
-      id: 'recorded-macro',
-      name: 'Recorded Macro',
-      repeatCnt: 1,
-      items: [{ id: 'none', type: 'NONE' }, ...res.steps]
-    }, null, 2);
-  }
-  setStatus(res?.ok ? `rec stop (${res.steps?.length || 0} steps)` : `rec stop fail: ${res?.error || 'unknown'}`);
+  const res = await chrome.runtime.sendMessage({
+    type: 'RUN_STOP_REQ',
+    requestId: uid(),
+    source: 'WEBAPP',
+    target: 'BG',
+    timestamp: Date.now(),
+    payload: { runId: `tab-${tabId}`, reason: 'USER', tabId }
+  });
+  status.textContent = JSON.stringify(res, null, 2);
 });

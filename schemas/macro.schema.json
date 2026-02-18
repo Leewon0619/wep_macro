@@ -1,91 +1,232 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wep-macro.local/schemas/macro.schema.json",
-  "title": "Web Macro Schema",
+  "title": "WEP Macro Schema",
   "type": "object",
-  "required": ["version", "macros"],
+  "required": ["schemaVersion", "macros"],
   "properties": {
-    "version": { "type": "string" },
+    "schemaVersion": { "const": 1 },
     "macros": {
       "type": "array",
-      "items": { "$ref": "#/$defs/macro" }
+      "items": { "$ref": "#/$defs/Macro" }
     }
   },
   "$defs": {
-    "macro": {
+    "VariableDef": {
       "type": "object",
-      "required": ["id", "name", "startKey", "stopKey", "repeatCnt", "items", "options"],
+      "required": ["name", "type", "required"],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string", "maxLength": 256 },
-        "startKey": { "type": "integer" },
-        "stopKey": { "type": "integer" },
-        "repeatCnt": { "type": "integer", "minimum": 0 },
-        "items": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/step" }
-        },
-        "options": { "$ref": "#/$defs/options" }
+        "name": { "type": "string" },
+        "type": { "enum": ["string", "number", "secret"] },
+        "required": { "type": "boolean" },
+        "default": { "type": ["string", "number"] },
+        "maskInUI": { "type": "boolean" }
       }
     },
-    "options": {
+    "SelectorCandidate": {
       "type": "object",
+      "required": ["kind", "value"],
       "properties": {
-        "allowlist": { "type": "array", "items": { "type": "string" } },
-        "minActionIntervalMs": { "type": "integer", "minimum": 0 },
-        "maxRunMs": { "type": "integer", "minimum": 1000 },
-        "maxLoopCountWhenInfinite": { "type": "integer", "minimum": 1 },
-        "recorder": {
-          "type": "object",
-          "properties": {
-            "KEYBOARD_KEY_REC": { "type": "boolean" },
-            "MOUSE_BUTTON_REC": { "type": "boolean" },
-            "MOUSE_POSITION_REC": { "type": "boolean" },
-            "MOUSE_WHEEL_REC": { "type": "boolean" },
-            "EVENT_DELAY": { "type": "boolean" },
-            "MERGE_UP_DOWN": { "type": "boolean" },
-            "mouseDistancePx": { "type": "number", "minimum": 0 },
-            "eventDelayThresholdMs": { "type": "integer", "minimum": 0 }
-          }
+        "kind": { "enum": ["CSS", "XPATH", "TEXT", "ARIA", "DATA_ATTR"] },
+        "value": { "type": "string" },
+        "weight": { "type": "number" }
+      }
+    },
+    "VerificationRule": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["TEXT_CONTAINS", "ATTRIBUTE_EQUALS", "VISIBLE"] },
+        "value": { "type": ["string", "boolean"] },
+        "attr": { "type": "string" }
+      }
+    },
+    "SelectorSpec": {
+      "type": "object",
+      "required": ["selectors"],
+      "properties": {
+        "selectors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SelectorCandidate" },
+          "minItems": 1
+        },
+        "verify": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/VerificationRule" }
         }
       }
     },
-    "step": {
+    "MacroPolicy": {
+      "type": "object",
+      "required": ["timeouts", "retries", "guards", "rateLimit", "privacy", "concurrency"],
+      "properties": {
+        "timeouts": {
+          "type": "object",
+          "required": ["defaultStepTimeoutMs"],
+          "properties": { "defaultStepTimeoutMs": { "type": "integer", "minimum": 1 } }
+        },
+        "retries": {
+          "type": "object",
+          "required": ["defaultRetryCount", "backoffMs"],
+          "properties": {
+            "defaultRetryCount": { "type": "integer", "minimum": 0 },
+            "backoffMs": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "guards": {
+          "type": "object",
+          "required": ["maxDurationMs", "maxTotalSteps", "maxRepeatsHardLimit"],
+          "properties": {
+            "maxDurationMs": { "type": "integer", "minimum": 1000 },
+            "maxTotalSteps": { "type": "integer", "minimum": 1 },
+            "maxRepeatsHardLimit": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "rateLimit": {
+          "type": "object",
+          "required": ["maxActionsPerSecond"],
+          "properties": { "maxActionsPerSecond": { "type": "number", "minimum": 0.1 } }
+        },
+        "privacy": {
+          "type": "object",
+          "required": ["blockSensitiveInputs", "maskLogs"],
+          "properties": {
+            "blockSensitiveInputs": { "type": "boolean" },
+            "maskLogs": { "type": "boolean" }
+          }
+        },
+        "concurrency": {
+          "type": "object",
+          "required": ["tabLock"],
+          "properties": { "tabLock": { "const": "EXCLUSIVE" } }
+        }
+      }
+    },
+    "RetrySpec": {
+      "type": "object",
+      "required": ["count"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "backoffMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "OnFailSpec": {
+      "type": "object",
+      "required": ["action"],
+      "properties": {
+        "action": { "enum": ["STOP", "SKIP", "GOTO"] },
+        "targetLabel": { "type": "string" }
+      }
+    },
+    "StepBase": {
       "type": "object",
       "required": ["id", "type"],
       "properties": {
         "id": { "type": "string" },
         "type": {
-          "type": "string",
-          "enum": ["NONE", "CLICK", "TYPE", "WAIT", "SCROLL", "ASSERT_EXISTS", "IF", "GOTO", "LABEL", "KEY", "MOVE"]
+          "enum": ["CLICK", "TYPE", "WAIT", "SCROLL", "ASSERT", "SET_VAR", "IF", "LABEL", "GOTO"]
         },
-        "enabled": { "type": "boolean" },
-        "timeoutMs": { "type": "integer", "minimum": 0 },
-        "retries": { "type": "integer", "minimum": 0 },
-        "backoffMs": { "type": "integer", "minimum": 0 },
-        "onFail": {
+        "label": { "type": "string" },
+        "timeoutMs": { "type": "integer", "minimum": 1 },
+        "retry": { "$ref": "#/$defs/RetrySpec" },
+        "onFail": { "$ref": "#/$defs/OnFailSpec" },
+        "note": { "type": "string" }
+      }
+    },
+    "Step": {
+      "allOf": [
+        { "$ref": "#/$defs/StepBase" },
+        {
           "type": "object",
           "properties": {
-            "action": { "type": "string", "enum": ["stop", "skip", "goto"] },
-            "label": { "type": "string" }
+            "target": {
+              "type": "object",
+              "properties": {
+                "selector": { "$ref": "#/$defs/SelectorSpec" }
+              }
+            },
+            "button": { "enum": ["LEFT", "RIGHT"] },
+            "clickCount": { "enum": [1, 2] },
+            "scrollIntoView": { "type": "boolean" },
+            "postWaitMs": { "type": "integer", "minimum": 0 },
+            "textTemplate": { "type": "string" },
+            "clearFirst": { "type": "boolean" },
+            "pressEnter": { "type": "boolean" },
+            "perCharDelayMs": { "type": "integer", "minimum": 0 },
+            "ms": { "type": "integer", "minimum": 0 },
+            "mode": { "enum": ["PIXEL", "ELEMENT"] },
+            "deltaY": { "type": "number" },
+            "expect": { "enum": ["EXISTS", "NOT_EXISTS", "TEXT_CONTAINS", "URL_MATCH"] },
+            "value": { "type": "string" },
+            "name": { "type": "string" },
+            "source": { "enum": ["CONST", "PAGE_TEXT", "RANDOM"] },
+            "constValue": { "type": ["string", "number"] },
+            "from": {
+              "type": "object",
+              "properties": {
+                "selector": { "$ref": "#/$defs/SelectorSpec" }
+              }
+            },
+            "random": {
+              "type": "object",
+              "properties": {
+                "kind": { "enum": ["UUID", "RAND_INT", "RAND_STR"] },
+                "min": { "type": "number" },
+                "max": { "type": "number" },
+                "length": { "type": "integer" },
+                "charset": { "type": "string" }
+              }
+            },
+            "condition": {
+              "type": "object",
+              "properties": {
+                "kind": { "enum": ["EXISTS", "NOT_EXISTS", "TEXT_CONTAINS", "VAR_EQUALS", "URL_MATCH"] },
+                "target": {
+                  "type": "object",
+                  "properties": {
+                    "selector": { "$ref": "#/$defs/SelectorSpec" }
+                  }
+                },
+                "varName": { "type": "string" },
+                "value": { "type": "string" }
+              }
+            },
+            "then": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Step" }
+            },
+            "else": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Step" }
+            },
+            "targetLabel": { "type": "string" }
           }
+        }
+      ]
+    },
+    "Macro": {
+      "type": "object",
+      "required": ["schemaVersion", "id", "name", "allowedDomains", "repeatCount", "variables", "steps", "policies", "createdAt", "updatedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "allowedDomains": {
+          "type": "array",
+          "items": { "type": "string" }
         },
-        "selector": { "type": "string" },
-        "button": { "type": "string", "enum": ["left", "right", "middle"] },
-        "doubleClick": { "type": "boolean" },
-        "textTemplate": { "type": "string" },
-        "clearFirst": { "type": "boolean" },
-        "ms": { "type": "integer", "minimum": 0 },
-        "pixels": { "type": "number" },
-        "label": { "type": "string" },
-        "condition": { "type": "object" },
-        "trueLabel": { "type": "string" },
-        "falseLabel": { "type": "string" },
-        "keyCode": { "type": "integer" },
-        "keyAction": { "type": "string", "enum": ["down", "up", "tap"] },
-        "offsetX": { "type": "number" },
-        "offsetY": { "type": "number" }
+        "repeatCount": { "type": "integer", "minimum": 0 },
+        "variables": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/VariableDef" }
+        },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Step" }
+        },
+        "policies": { "$ref": "#/$defs/MacroPolicy" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
       }
     }
   }

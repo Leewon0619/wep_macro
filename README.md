@@ -1,55 +1,31 @@
-# Web Macro Studio (Key Macro Web Rebuild)
+# WEP Macro Program
 
-원본 `key_macro1` 동작 규칙을 웹 환경에 맞게 재구현한 프로젝트입니다.
+명세 기반 구성:
+- `web/`: 편집/저장/실행/로그/화면녹화 UI
+- `extension/`: 녹화 엔진 + 실행 엔진 + 탭 동시실행 제어
+- `schemas/`: Macro JSON 스키마
+- `docs/`: 정책/프로토콜/엔진 설계 문서
 
-구성:
-- `web/`: 매크로 편집/녹화/실행 웹앱(UI)
-- `extension/`: 브라우저 확장 실행/녹화 엔진(MV3)
-- `docs/`: 설계 산출물 7종
-- `schemas/`: JSON 스키마
-- `key_macro1/`: 업로드된 원본 C++ 소스(참조)
+## 실행
 
-## 빠른 실행(웹앱)
-
-정적 서버로 `web` 폴더를 열면 됩니다.
-
-예:
+웹앱:
 ```bash
 cd web
 python3 -m http.server 8080
 ```
+접속: `http://localhost:8080`
 
-브라우저에서 `http://localhost:8080` 접속.
-
-## 확장 실행(MV3)
-
-1. Chrome -> `chrome://extensions`
+확장:
+1. `chrome://extensions`
 2. 개발자 모드 ON
-3. `압축해제된 확장 프로그램 로드` 클릭
-4. `extension/` 폴더 선택
+3. `압축해제된 확장 프로그램 로드`
+4. `extension/` 선택
 
-## 구현 범위
-
-- 원본 핵심 로직 반영:
-  - `repeat_cnt=0` 무한 반복
-  - `index=1`부터 실행(`item[0]=NONE` 더미)
-  - 상태 머신 실행(`idle/running/paused/success/fail/stopped`)
-  - 이벤트 지연 삽입/병합 옵션
-  - 시작/정지 단축키의 up/down 분리 비트 규칙
-- 웹 보안 가드:
-  - 도메인 allowlist
-  - 민감 입력 마스킹/저장 제한
-  - 속도 제한
-  - 무한 루프 안전장치
-  - 최초 실행 승인
-
-## 산출물 7종
-
-1. `docs/01-feature-spec.md`
-2. `docs/02-json-schema.md`
-3. `docs/03-ui-design.md`
-4. `docs/04-execution-engine.md`
-5. `docs/05-recorder-engine.md`
-6. `docs/06-guardrails.md`
-7. `docs/07-roadmap.md`
-
+## 핵심 준수 항목
+- Envelope 기반 메시지 프로토콜(`*_REQ/*_RES/*_EVT`)
+- Macro/Step JSON 스키마 고정
+- 실패/재시도/분기/onFail 정책
+- repeatCount=0 무한 반복 + 안전 가드
+- 도메인 allowlist 강제
+- 민감 입력 차단/마스킹
+- getDisplayMedia 화면 녹화 + run step 마커 동기화

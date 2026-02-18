@@ -5,63 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Demo</title>
   <style>
-    body { font-family: sans-serif; margin: 14px; background: #f6fbff; }
-    .box { border: 1px solid #d3e1f5; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #fff; }
-    .row { margin-top: 8px; }
-    input, select { padding: 6px; }
-    button { padding: 6px 10px; margin-right: 4px; }
-    #state { font-weight: 700; color: #0a6a8d; }
+    body { font-family: sans-serif; margin: 12px; background: #f7fbff; }
+    .box { border: 1px solid #d9e5f5; border-radius: 10px; padding: 12px; background: #fff; margin-bottom: 10px; }
+    button, input, select { padding: 6px; margin-right: 4px; }
+    #state { font-weight: 700; color: #0f6c8b; }
   </style>
 </head>
 <body>
   <div class="box">
-    <button id="btn-open">준비</button>
-    <button id="btn-count">카운트+1</button>
-    <button id="btn-late" disabled>3초 후 활성화</button>
-    <span class="row">상태: <span id="state">idle</span></span>
+    <button id="open">준비</button>
+    <button id="count">카운트+1</button>
+    <button id="late" disabled>지연 버튼</button>
+    <div>상태: <span id="state">idle</span></div>
   </div>
 
   <div class="box">
-    <input id="input-text" placeholder="텍스트 입력" />
-    <input id="input-password" type="password" placeholder="password(녹화 시 마스킹 대상)" />
-    <select id="select-mode">
-      <option value="A">A</option>
-      <option value="B">B</option>
-    </select>
-    <button id="btn-add">추가</button>
+    <input id="idInput" placeholder="아이디" />
+    <input id="pwInput" type="password" placeholder="비밀번호" />
+    <select id="sel"><option>A</option><option>B</option></select>
+    <button id="add">추가</button>
     <ul id="list"></ul>
   </div>
 
   <script>
-    let count = 0;
+    let c = 0;
     const state = document.getElementById('state');
-
-    document.getElementById('btn-open').addEventListener('click', () => {
+    document.getElementById('open').addEventListener('click', () => {
       state.textContent = 'ready';
       setTimeout(() => {
-        document.getElementById('btn-late').disabled = false;
+        document.getElementById('late').disabled = false;
         state.textContent = 'late-enabled';
-      }, 3000);
+      }, 2500);
     });
-
-    document.getElementById('btn-count').addEventListener('click', () => {
-      count += 1;
-      state.textContent = `count-${count}`;
+    document.getElementById('count').addEventListener('click', () => {
+      c += 1;
+      state.textContent = `count-${c}`;
     });
-
-    document.getElementById('btn-late').addEventListener('click', () => {
-      state.textContent = 'late-clicked';
+    document.getElementById('late').addEventListener('click', () => {
+      state.textContent = 'done';
       location.hash = '#done';
     });
-
-    document.getElementById('btn-add').addEventListener('click', () => {
-      const input = document.getElementById('input-text');
-      const mode = document.getElementById('select-mode').value;
-      if (!input.value.trim()) return;
+    document.getElementById('add').addEventListener('click', () => {
+      const v = document.getElementById('idInput').value.trim();
+      if (!v) return;
       const li = document.createElement('li');
-      li.textContent = `${input.value.trim()} / ${mode}`;
+      li.textContent = `${v}/${document.getElementById('sel').value}`;
       document.getElementById('list').appendChild(li);
-      input.value = '';
       state.textContent = 'added';
     });
   </script>

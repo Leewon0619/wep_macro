@@ -4,26 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <style>
-    body { font-family: sans-serif; width: 320px; margin: 10px; }
-    .row { display: flex; gap: 6px; margin-bottom: 6px; }
-    input, textarea, button { width: 100%; padding: 6px; }
-    textarea { min-height: 80px; }
+    body { font-family: sans-serif; width: 300px; margin: 10px; }
+    button { width: 100%; padding: 6px; margin-bottom: 6px; }
+    pre { background: #111827; color: #dbeafe; border-radius: 8px; padding: 8px; min-height: 40px; }
   </style>
 </head>
 <body>
-  <h3>Macro Runner</h3>
-  <div class="row">
-    <button id="run">현재 탭 실행</button>
-    <button id="stop">정지</button>
-  </div>
-  <div class="row">
-    <button id="recStart">녹화 시작</button>
-    <button id="recStop">녹화 정지</button>
-  </div>
-  <label>Macro JSON</label>
-  <textarea id="macroJson"></textarea>
-  <label>Allowlist host (comma)</label>
-  <input id="allowlist" placeholder="example.com, localhost" />
+  <button id="ping">EXT_PING</button>
+  <button id="stopAll">RUN_STOP(active tab)</button>
   <pre id="status">ready</pre>
   <script src="popup.js" type="module"></script>
 </body>
