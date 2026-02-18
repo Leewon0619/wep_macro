@@ -6,6 +6,14 @@ const $ = (id) => document.getElementById(id);
 
 const el = {
   addMacro: $('addMacro'),
+  easyRecStart: $('easyRecStart'),
+  easyRecStopRun: $('easyRecStopRun'),
+  easyRun: $('easyRun'),
+  easyToggle: $('easyToggle'),
+  advancedMacro: $('advancedMacro'),
+  advancedSteps: $('advancedSteps'),
+  advancedRecRun: $('advancedRecRun'),
+  advancedScreenRec: $('advancedScreenRec'),
   macroList: $('macroList'),
   macroName: $('macroName'),
   allowedDomains: $('allowedDomains'),
@@ -88,6 +96,9 @@ const state = {
     recorder: null,
     chunks: [],
     markers: []
+  },
+  ui: {
+    advancedVisible: true
   }
 };
 
@@ -732,6 +743,32 @@ async function runStart() {
   await runLocal(m, runOptions());
 }
 
+function setAdvancedVisible(visible) {
+  state.ui.advancedVisible = visible;
+  [el.advancedMacro, el.advancedSteps, el.advancedRecRun, el.advancedScreenRec].forEach((node) => {
+    if (!node) return;
+    node.classList.toggle('hidden', !visible);
+  });
+  if (el.easyToggle) {
+    el.easyToggle.textContent = visible ? '상세 설정 숨기기' : '상세 설정 보기';
+  }
+}
+
+async function easyRecordStart() {
+  await startRec();
+  addLog('EASY', 'GUIDE', '이제 오른쪽 테스트 페이지를 직접 조작하세요.');
+  updateStatus('간편모드: 녹화 중');
+}
+
+async function easyRecordStopAndRun() {
+  await stopRec();
+  await runStart();
+}
+
+async function easyRunNow() {
+  await runStart();
+}
+
 async function runPause() {
   if (state.extensionConnected && state.run.runId) {
     await sendToExtension('RUN_PAUSE_REQ', 'BG', { runId: state.run.runId });
@@ -1220,6 +1257,11 @@ function bindUi() {
   el.runStop.addEventListener('click', runStop);
   el.screenRecStart.addEventListener('click', startScreenRec);
   el.screenRecStop.addEventListener('click', stopScreenRec);
+
+  el.easyRecStart?.addEventListener('click', easyRecordStart);
+  el.easyRecStopRun?.addEventListener('click', easyRecordStopAndRun);
+  el.easyRun?.addEventListener('click', easyRunNow);
+  el.easyToggle?.addEventListener('click', () => setAdvancedVisible(!state.ui.advancedVisible));
 }
 
 function init() {
@@ -1229,6 +1271,7 @@ function init() {
   renderStepTable();
   renderLogs();
   bindUi();
+  setAdvancedVisible(false);
   updateStatus('ready');
   void extPing();
 }

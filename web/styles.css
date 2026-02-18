@@ -101,6 +101,7 @@ th, td {
   vertical-align: top;
 }
 .muted { color: var(--muted); font-size: 0.86rem; }
+.hidden { display: none !important; }
 iframe {
   width: 100%;
   min-height: 520px;
