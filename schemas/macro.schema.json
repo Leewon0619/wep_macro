@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wep-macro.local/schemas/macro.schema.json",
+  "title": "Web Macro Schema",
+  "type": "object",
+  "required": ["version", "macros"],
+  "properties": {
+    "version": { "type": "string" },
+    "macros": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/macro" }
+    }
+  },
+  "$defs": {
+    "macro": {
+      "type": "object",
+      "required": ["id", "name", "startKey", "stopKey", "repeatCnt", "items", "options"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 256 },
+        "startKey": { "type": "integer" },
+        "stopKey": { "type": "integer" },
+        "repeatCnt": { "type": "integer", "minimum": 0 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/step" }
+        },
+        "options": { "$ref": "#/$defs/options" }
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "allowlist": { "type": "array", "items": { "type": "string" } },
+        "minActionIntervalMs": { "type": "integer", "minimum": 0 },
+        "maxRunMs": { "type": "integer", "minimum": 1000 },
+        "maxLoopCountWhenInfinite": { "type": "integer", "minimum": 1 },
+        "recorder": {
+          "type": "object",
+          "properties": {
+            "KEYBOARD_KEY_REC": { "type": "boolean" },
+            "MOUSE_BUTTON_REC": { "type": "boolean" },
+            "MOUSE_POSITION_REC": { "type": "boolean" },
+            "MOUSE_WHEEL_REC": { "type": "boolean" },
+            "EVENT_DELAY": { "type": "boolean" },
+            "MERGE_UP_DOWN": { "type": "boolean" },
+            "mouseDistancePx": { "type": "number", "minimum": 0 },
+            "eventDelayThresholdMs": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["NONE", "CLICK", "TYPE", "WAIT", "SCROLL", "ASSERT_EXISTS", "IF", "GOTO", "LABEL", "KEY", "MOVE"]
+        },
+        "enabled": { "type": "boolean" },
+        "timeoutMs": { "type": "integer", "minimum": 0 },
+        "retries": { "type": "integer", "minimum": 0 },
+        "backoffMs": { "type": "integer", "minimum": 0 },
+        "onFail": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string", "enum": ["stop", "skip", "goto"] },
+            "label": { "type": "string" }
+          }
+        },
+        "selector": { "type": "string" },
+        "button": { "type": "string", "enum": ["left", "right", "middle"] },
+        "doubleClick": { "type": "boolean" },
+        "textTemplate": { "type": "string" },
+        "clearFirst": { "type": "boolean" },
+        "ms": { "type": "integer", "minimum": 0 },
+        "pixels": { "type": "number" },
+        "label": { "type": "string" },
+        "condition": { "type": "object" },
+        "trueLabel": { "type": "string" },
+        "falseLabel": { "type": "string" },
+        "keyCode": { "type": "integer" },
+        "keyAction": { "type": "string", "enum": ["down", "up", "tap"] },
+        "offsetX": { "type": "number" },
+        "offsetY": { "type": "number" }
+      }
+    }
+  }
+}

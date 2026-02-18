@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Macro Studio</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="card hero">
+      <h1>Web Macro Studio</h1>
+      <p>원본 key_macro 동작 규칙 기반 웹/확장 매크로 빌더</p>
+    </header>
+
+    <section class="layout">
+      <aside class="card side">
+        <div class="head-row">
+          <h2>매크로</h2>
+          <button id="addMacro" class="primary">+ 새 매크로</button>
+        </div>
+        <ul id="macroList" class="macro-list"></ul>
+
+        <div class="mini-form">
+          <label>이름 <input id="macroName" type="text" /></label>
+          <label>시작 키(VK)
+            <input id="startKey" type="number" value="113" />
+          </label>
+          <label>정지 키(VK)
+            <input id="stopKey" type="number" value="114" />
+          </label>
+          <label>반복 횟수(0=무한)
+            <input id="repeatCnt" type="number" value="1" min="0" />
+          </label>
+          <label class="inline">
+            <input id="startOnKeyUp" type="checkbox" /> 시작키를 key up 이벤트로 인식
+          </label>
+          <label class="inline">
+            <input id="stopOnKeyUp" type="checkbox" /> 정지키를 key up 이벤트로 인식
+          </label>
+          <div class="row">
+            <button id="saveMacro">매크로 저장</button>
+            <button id="deleteMacro" class="danger">삭제</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="card main">
+        <div class="head-row">
+          <h2>스텝 빌더</h2>
+          <div class="row">
+            <button data-add-step="CLICK">+ CLICK</button>
+            <button data-add-step="TYPE">+ TYPE</button>
+            <button data-add-step="WAIT">+ WAIT</button>
+            <button data-add-step="SCROLL">+ SCROLL</button>
+            <button data-add-step="ASSERT_EXISTS">+ ASSERT</button>
+            <button data-add-step="IF">+ IF</button>
+            <button data-add-step="GOTO">+ GOTO</button>
+            <button data-add-step="LABEL">+ LABEL</button>
+          </div>
+        </div>
+
+        <table class="step-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>타입</th>
+              <th>핵심 값</th>
+              <th>옵션</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="stepBody"></tbody>
+        </table>
+
+        <details>
+          <summary>레코더 옵션</summary>
+          <div class="option-grid">
+            <label class="inline"><input id="recKey" type="checkbox" /> KEYBOARD_KEY_REC</label>
+            <label class="inline"><input id="recMouseButton" type="checkbox" checked /> MOUSE_BUTTON_REC</label>
+            <label class="inline"><input id="recMouseMove" type="checkbox" /> MOUSE_POSITION_REC</label>
+            <label class="inline"><input id="recMouseWheel" type="checkbox" checked /> MOUSE_WHEEL_REC</label>
+            <label class="inline"><input id="recDelay" type="checkbox" checked /> EVENT_DELAY</label>
+            <label class="inline"><input id="recMerge" type="checkbox" checked /> MERGE_UP_DOWN</label>
+            <label>mouse distance(px)
+              <input id="recDistance" type="number" value="12" min="0" />
+            </label>
+            <label>event delay threshold(ms)
+              <input id="recDelayThreshold" type="number" value="200" min="0" />
+            </label>
+          </div>
+        </details>
+
+        <details>
+          <summary>실행/보안 옵션</summary>
+          <div class="option-grid">
+            <label>Allowlist(host, comma)
+              <input id="allowlist" type="text" placeholder="example.com, localhost" />
+            </label>
+            <label>최소 액션 간격(ms)
+              <input id="minActionInterval" type="number" value="80" min="0" />
+            </label>
+            <label>무한 반복 최대 실행 시간(ms)
+              <input id="maxRunMs" type="number" value="600000" min="1000" />
+            </label>
+            <label>무한 반복 최대 루프 수
+              <input id="maxLoopWhenInfinite" type="number" value="1000" min="1" />
+            </label>
+          </div>
+        </details>
+      </section>
+    </section>
+
+    <section class="card actions">
+      <div class="row">
+        <button id="startRun" class="primary">실행</button>
+        <button id="pauseRun">일시정지</button>
+        <button id="resumeRun">재개</button>
+        <button id="stopRun" class="danger">정지</button>
+        <button id="startRec">녹화 시작</button>
+        <button id="stopRec">녹화 정지</button>
+        <button id="clearLogs">로그 비우기</button>
+      </div>
+      <pre id="status">상태: idle</pre>
+    </section>
+
+    <section class="layout2">
+      <article class="card">
+        <h2>실행 로그</h2>
+        <table>
+          <thead>
+            <tr><th>시간</th><th>레벨</th><th>스텝</th><th>소요(ms)</th><th>누적(ms)</th><th>메시지</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </article>
+
+      <article class="card">
+        <h2>테스트 페이지(레코더/실행)</h2>
+        <iframe id="playground" src="./demo.html" title="playground"></iframe>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

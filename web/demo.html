@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo</title>
+  <style>
+    body { font-family: sans-serif; margin: 14px; background: #f6fbff; }
+    .box { border: 1px solid #d3e1f5; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #fff; }
+    .row { margin-top: 8px; }
+    input, select { padding: 6px; }
+    button { padding: 6px 10px; margin-right: 4px; }
+    #state { font-weight: 700; color: #0a6a8d; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <button id="btn-open">준비</button>
+    <button id="btn-count">카운트+1</button>
+    <button id="btn-late" disabled>3초 후 활성화</button>
+    <span class="row">상태: <span id="state">idle</span></span>
+  </div>
+
+  <div class="box">
+    <input id="input-text" placeholder="텍스트 입력" />
+    <input id="input-password" type="password" placeholder="password(녹화 시 마스킹 대상)" />
+    <select id="select-mode">
+      <option value="A">A</option>
+      <option value="B">B</option>
+    </select>
+    <button id="btn-add">추가</button>
+    <ul id="list"></ul>
+  </div>
+
+  <script>
+    let count = 0;
+    const state = document.getElementById('state');
+
+    document.getElementById('btn-open').addEventListener('click', () => {
+      state.textContent = 'ready';
+      setTimeout(() => {
+        document.getElementById('btn-late').disabled = false;
+        state.textContent = 'late-enabled';
+      }, 3000);
+    });
+
+    document.getElementById('btn-count').addEventListener('click', () => {
+      count += 1;
+      state.textContent = `count-${count}`;
+    });
+
+    document.getElementById('btn-late').addEventListener('click', () => {
+      state.textContent = 'late-clicked';
+      location.hash = '#done';
+    });
+
+    document.getElementById('btn-add').addEventListener('click', () => {
+      const input = document.getElementById('input-text');
+      const mode = document.getElementById('select-mode').value;
+      if (!input.value.trim()) return;
+      const li = document.createElement('li');
+      li.textContent = `${input.value.trim()} / ${mode}`;
+      document.getElementById('list').appendChild(li);
+      input.value = '';
+      state.textContent = 'added';
+    });
+  </script>
+</body>
+</html>
