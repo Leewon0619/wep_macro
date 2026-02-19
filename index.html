@@ -1,15 +1,86 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WEP Macro Studio</title>
-  <meta http-equiv="refresh" content="0; url=./web/" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Macro Program (Web)</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <p>새 웹앱으로 이동 중입니다: <a href="./web/">./web/</a></p>
-  <script>
-    location.replace('./web/');
-  </script>
+  <div id="app">
+    <header>
+      <h1>Macro Program</h1>
+      <div class="status" id="status">Ready</div>
+    </header>
+
+    <section class="controls">
+      <button id="btn-onoff" class="primary">On</button>
+      <button id="btn-edit">Edit</button>
+      <button id="btn-record">Record</button>
+      <button id="btn-run">Run</button>
+      <button id="btn-add">Add Macro</button>
+      <button id="btn-delete">Delete Macro</button>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>Macros</h2>
+        <div id="macro-list" class="macro-list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Recording</h2>
+        <div class="row">
+          <div class="label">[Record]</div>
+          <div class="value" id="record-state">Idle</div>
+        </div>
+        <div class="row">
+          <div class="label">Events</div>
+          <div class="value" id="event-count">0</div>
+        </div>
+        <p class="hint">Recording captures keyboard and mouse events while this page is focused.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Shortcuts</h2>
+        <div class="shortcut-list" id="shortcut-list"></div>
+        <p class="hint">Click a shortcut and press a key to assign.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Files</h2>
+      <div class="files">
+        <button id="btn-save-m">Save .m</button>
+        <label class="file-btn">
+          Load .m
+          <input type="file" id="file-m" accept=".m,application/json" />
+        </label>
+        <button id="btn-save-ini">Save key_macro.ini</button>
+        <label class="file-btn">
+          Load key_macro.ini
+          <input type="file" id="file-ini" accept=".ini,text/plain" />
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Macro Actions</h2>
+      <div class="row">
+        <div class="label">Run Wait</div>
+        <div class="value" id="run-wait">Off</div>
+      </div>
+      <div class="row">
+        <div class="label">Edit Mode</div>
+        <div class="value" id="edit-mode">Off</div>
+      </div>
+      <div class="row">
+        <div class="label">Run Enabled</div>
+        <div class="value" id="run-enabled">On</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

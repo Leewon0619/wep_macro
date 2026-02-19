@@ -1,0 +1,205 @@
+:root {
+  --bg: #0f141a;
+  --panel: #151c24;
+  --text: #e6edf3;
+  --muted: #9fb0c0;
+  --accent: #2dd4bf;
+  --danger: #ef4444;
+  --border: #233040;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Mono", "Fira Mono", "Courier New", monospace;
+  background: radial-gradient(1200px 600px at 10% 10%, #16212c 0%, #0f141a 55%, #0b0f14 100%);
+  color: var(--text);
+}
+
+#app {
+  max-width: 1100px;
+  margin: 24px auto 48px;
+  padding: 0 16px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+h2 {
+  font-size: 16px;
+  margin: 0 0 12px;
+  color: var(--accent);
+}
+
+.status {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+button, .file-btn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+button.primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.active {
+  background: #1f2a36;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+  color: var(--muted);
+}
+
+.label {
+  color: var(--text);
+}
+
+.hint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.macro-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.macro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.macro-item.active {
+  border-color: var(--accent);
+}
+
+.macro-name {
+  flex: 1;
+  color: var(--text);
+}
+
+.macro-input {
+  width: 100%;
+  background: #0b0f14;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: inherit;
+}
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.shortcut-key {
+  color: var(--accent);
+}
+
+.files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.file-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
