@@ -66,8 +66,10 @@ const i18n = {
     "label.edit_mode": "Edit Mode",
     "label.run_enabled": "Run Enabled",
     "label.fullscreen": "Fullscreen",
-    "label.pos_x": "X",
-    "label.pos_y": "Y",
+    "label.pos_x_manual": "X (Manual)",
+    "label.pos_y_manual": "Y (Manual)",
+    "label.pos_x_coord": "X (Coord)",
+    "label.pos_y_coord": "Y (Coord)",
     "label.coord_mode": "Coord Mode",
     "label.action": "Action",
     "label.log_mode": "Log Mode",
@@ -159,8 +161,10 @@ const i18n = {
     "label.edit_mode": "편집 모드",
     "label.run_enabled": "실행 가능",
     "label.fullscreen": "전체 화면",
-    "label.pos_x": "X",
-    "label.pos_y": "Y",
+    "label.pos_x_manual": "X (수동)",
+    "label.pos_y_manual": "Y (수동)",
+    "label.pos_x_coord": "X (좌표)",
+    "label.pos_y_coord": "Y (좌표)",
     "label.coord_mode": "좌표 모드",
     "label.action": "동작",
     "label.log_mode": "로그 모드",
@@ -707,8 +711,13 @@ function addManualEvent() {
     setStatus(t("status.no_macro"));
     return;
   }
-  const x = Number($("#manual-x").value);
-  const y = Number($("#manual-y").value);
+  const manualX = Number($("#manual-x").value);
+  const manualY = Number($("#manual-y").value);
+  const coordX = Number($("#coord-x").value);
+  const coordY = Number($("#coord-y").value);
+  const useCoord = state.coordMode && Number.isFinite(coordX) && Number.isFinite(coordY);
+  const x = useCoord ? coordX : manualX;
+  const y = useCoord ? coordY : manualY;
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
     setStatus(t("status.invalid_pos"));
     return;
@@ -731,8 +740,8 @@ function addManualEvent() {
 
 function handleCoordMove(e) {
   if (!state.coordMode) return;
-  $("#manual-x").value = Math.round(e.clientX);
-  $("#manual-y").value = Math.round(e.clientY);
+  $("#coord-x").value = Math.round(e.clientX);
+  $("#coord-y").value = Math.round(e.clientY);
 }
 
 function toggleLogMode() {
