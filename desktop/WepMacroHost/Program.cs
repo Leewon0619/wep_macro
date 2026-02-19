@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 
 const string PipeName = "wep_macro_pipe";
+const string ConfigPath = "C:\\WepMacro\\host.config.json";
 
 var fromExtension = Task.Run(() => ForwardToAppAsync());
 var fromApp = Task.Run(() => ForwardToExtensionAsync());
@@ -14,6 +15,11 @@ async Task ForwardToAppAsync()
     {
         var message = ReadMessage(Console.OpenStandardInput());
         if (message == null) break;
+        if (TryHandleLaunch(message))
+        {
+            WriteMessage(Console.OpenStandardOutput(), JsonSerializer.Serialize(new { ok = true, launched = true }));
+            continue;
+        }
         try
         {
             using var client = new System.IO.Pipes.NamedPipeClientStream(".", PipeName, System.IO.Pipes.PipeDirection.Out);
@@ -28,6 +34,47 @@ async Task ForwardToAppAsync()
 
         WriteMessage(Console.OpenStandardOutput(), JsonSerializer.Serialize(new { ok = true }));
     }
+}
+
+bool TryHandleLaunch(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        if (!doc.RootElement.TryGetProperty("type", out var typeEl)) return false;
+        if (!string.Equals(typeEl.GetString(), "launchApp", StringComparison.OrdinalIgnoreCase)) return false;
+
+        var appPath = ReadAppPath();
+        if (string.IsNullOrWhiteSpace(appPath)) return false;
+        if (!File.Exists(appPath)) return false;
+
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(appPath)
+        {
+            UseShellExecute = true
+        });
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
+}
+
+string? ReadAppPath()
+{
+    try
+    {
+        if (!File.Exists(ConfigPath)) return null;
+        using var doc = JsonDocument.Parse(File.ReadAllText(ConfigPath));
+        if (doc.RootElement.TryGetProperty("appPath", out var pathEl))
+        {
+            return pathEl.GetString();
+        }
+    }
+    catch
+    {
+    }
+    return null;
 }
 
 async Task ForwardToExtensionAsync()

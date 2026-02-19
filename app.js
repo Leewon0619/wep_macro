@@ -47,6 +47,7 @@ const i18n = {
     "btn.save_ini": "Save wep_macro.ini",
     "btn.load_ini": "Load wep_macro.ini",
     "btn.fullscreen": "Enable Fullscreen",
+    "btn.launch_app": "Launch WPF App",
     "btn.coord_mode": "Coord Mode",
     "btn.add_event": "Add Event",
     "btn.log_mode": "Log Mode",
@@ -144,6 +145,7 @@ const i18n = {
     "btn.save_ini": "wep_macro.ini 저장",
     "btn.load_ini": "wep_macro.ini 불러오기",
     "btn.fullscreen": "전체 화면 활성화",
+    "btn.launch_app": "WPF 앱 실행",
     "btn.coord_mode": "좌표 모드",
     "btn.add_event": "이벤트 추가",
     "btn.log_mode": "로그 모드",
@@ -992,6 +994,11 @@ function wireEvents() {
   $("#file-m").addEventListener("change", (e) => loadMacroFile(e.target.files[0]));
   $("#btn-save-ini").addEventListener("click", saveIniFile);
   $("#file-ini").addEventListener("change", (e) => loadIniFile(e.target.files[0]));
+
+  $("#btn-launch-app").addEventListener("click", () => {
+    window.postMessage({ source: "wep-macro", type: "launchApp" }, "*");
+    setStatus(t("status.ready"));
+  });
 
   $("#repeat-count").addEventListener("change", (e) => {
     const value = Number(e.target.value);

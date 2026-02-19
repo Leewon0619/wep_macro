@@ -55,6 +55,11 @@ function handleNativeMessage(msg) {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "launchApp") {
+    sendToNative({ type: "launchApp" });
+    sendResponse({ ok: true });
+    return;
+  }
   if (msg.type === "macroRecorded") {
     lastMacro = msg.payload;
     chrome.storage.local.set({ lastMacro });
