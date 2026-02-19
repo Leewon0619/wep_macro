@@ -529,6 +529,9 @@ function runMacro() {
 }
 
 function replayEvent(evt) {
+  if (evt.type === "mousedown") {
+    showClickEffect(evt.x, evt.y);
+  }
   if (evt.type.startsWith("key")) {
     const event = new KeyboardEvent(evt.type, {
       key: evt.key,
@@ -546,6 +549,15 @@ function replayEvent(evt) {
     });
     document.dispatchEvent(event);
   }
+}
+
+function showClickEffect(x, y) {
+  const effect = document.createElement("div");
+  effect.className = "click-effect";
+  effect.style.left = `${x}px`;
+  effect.style.top = `${y}px`;
+  document.body.appendChild(effect);
+  setTimeout(() => effect.remove(), 400);
 }
 
 function toggleRunWait() {
@@ -791,6 +803,10 @@ function wireEvents() {
   document.addEventListener("keydown", (e) => {
     if (handleShortcutAssignment(e)) return;
     handleGlobalShortcuts(e);
+  });
+
+  document.addEventListener("mousedown", (e) => {
+    showClickEffect(e.clientX, e.clientY);
   });
 }
 
