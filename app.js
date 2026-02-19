@@ -49,12 +49,15 @@ const i18n = {
     "btn.fullscreen": "Enable Fullscreen",
     "btn.coord_mode": "Coord Mode",
     "btn.add_event": "Add Event",
+    "btn.log_mode": "Log Mode",
+    "btn.log_clear": "Clear Log",
     "section.macros": "Macros",
     "section.recording": "Recording",
     "section.shortcuts": "Shortcuts",
     "section.files": "Files",
     "section.actions": "Macro Actions",
     "section.manual": "Manual Macro",
+    "section.log": "Log Mode",
     "label.record": "[Record]",
     "label.events": "Events",
     "label.run_time": "Run Time",
@@ -67,10 +70,12 @@ const i18n = {
     "label.pos_y": "Y",
     "label.coord_mode": "Coord Mode",
     "label.action": "Action",
+    "label.log_mode": "Log Mode",
     "hint.recording": "Recording captures keyboard and mouse events while this page is focused.",
     "hint.shortcuts": "Click a shortcut and press a key to assign.",
     "hint.repeat": "Set 0 for infinite repeat until stopped.",
     "hint.manual": "Enable Coord Mode to keep updating the position, then add a mouse action.",
+    "hint.log": "Logs mouse clicks/movement and keyboard keys while enabled.",
     "action.mousedown": "Mouse Down",
     "action.mouseup": "Mouse Up",
     "action.click": "Click",
@@ -137,12 +142,15 @@ const i18n = {
     "btn.fullscreen": "전체 화면 활성화",
     "btn.coord_mode": "좌표 모드",
     "btn.add_event": "이벤트 추가",
+    "btn.log_mode": "로그 모드",
+    "btn.log_clear": "로그 지우기",
     "section.macros": "매크로",
     "section.recording": "기록",
     "section.shortcuts": "단축키",
     "section.files": "파일",
     "section.actions": "매크로 동작",
     "section.manual": "수동 매크로",
+    "section.log": "로그 모드",
     "label.record": "[기록]",
     "label.events": "이벤트",
     "label.run_time": "실행 시간",
@@ -155,10 +163,12 @@ const i18n = {
     "label.pos_y": "Y",
     "label.coord_mode": "좌표 모드",
     "label.action": "동작",
+    "label.log_mode": "로그 모드",
     "hint.recording": "이 페이지가 포커스일 때만 키보드/마우스가 기록됩니다.",
     "hint.shortcuts": "단축키를 클릭하고 키를 눌러 지정하세요.",
     "hint.repeat": "0으로 설정하면 해제할 때까지 무한 반복합니다.",
     "hint.manual": "좌표 모드를 켜서 위치를 계속 갱신한 뒤, 이벤트를 추가하세요.",
+    "hint.log": "로그 모드를 켜면 마우스/키보드 입력이 기록됩니다.",
     "action.mousedown": "마우스 누름",
     "action.mouseup": "마우스 뗌",
     "action.click": "클릭",
@@ -195,6 +205,10 @@ const state = {
   runStart: 0,
   runTimerId: null,
   coordMode: false,
+  logMode: false,
+  logBuffer: [],
+  logMax: 200,
+  _lastMoveLog: 0,
   shortcuts: {
     recordToggle: "KeyR",
     runToggle: "KeyT",
@@ -217,6 +231,7 @@ function saveState() {
     language: state.language,
     repeatCount: state.repeatCount,
     coordMode: state.coordMode,
+    logMode: state.logMode,
     shortcuts: state.shortcuts,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -239,6 +254,7 @@ function loadState() {
     state.language = data.language || "en";
     state.repeatCount = Number.isFinite(data.repeatCount) ? data.repeatCount : 1;
     state.coordMode = !!data.coordMode;
+    state.logMode = !!data.logMode;
     state.shortcuts = { ...state.shortcuts, ...(data.shortcuts || {}) };
   } catch {
     state.macros = [{ id: crypto.randomUUID(), name: "Macro 1", events: [] }];
@@ -362,6 +378,7 @@ function renderIndicators() {
   $("#run-enabled").textContent = state.runEnabled ? t("state.on") : t("state.off");
   $("#fullscreen-state").textContent = state.fullScreenEnabled ? t("state.on") : t("state.off");
   $("#coord-mode").textContent = state.coordMode ? t("state.on") : t("state.off");
+  $("#log-mode").textContent = state.logMode ? t("state.on") : t("state.off");
   $("#run-time").textContent = formatRunTime();
 
   const runBtn = $("#btn-run");
@@ -718,6 +735,38 @@ function handleCoordMove(e) {
   $("#manual-y").value = Math.round(e.clientY);
 }
 
+function toggleLogMode() {
+  state.logMode = !state.logMode;
+  saveState();
+  renderIndicators();
+}
+
+function clearLog() {
+  state.logBuffer = [];
+  renderLog();
+}
+
+function renderLog() {
+  const out = $("#log-output");
+  if (!out) return;
+  out.textContent = state.logBuffer.join("\n");
+  out.scrollTop = out.scrollHeight;
+}
+
+function pushLog(line) {
+  state.logBuffer.push(line);
+  if (state.logBuffer.length > state.logMax) {
+    state.logBuffer.splice(0, state.logBuffer.length - state.logMax);
+  }
+  renderLog();
+}
+
+function logEvent(e, kind, details) {
+  if (!state.logMode) return;
+  const ts = new Date().toLocaleTimeString();
+  pushLog(`[${ts}] ${kind} ${details}`);
+}
+
 function handleShortcutAssignment(e) {
   if (!state.awaitingShortcut) return false;
   e.preventDefault();
@@ -903,6 +952,9 @@ function wireEvents() {
   $("#btn-coord-mode").addEventListener("click", toggleCoordMode);
   $("#btn-add-event").addEventListener("click", addManualEvent);
 
+  $("#btn-log-mode").addEventListener("click", toggleLogMode);
+  $("#btn-log-clear").addEventListener("click", clearLog);
+
   document.addEventListener("mousemove", handleCoordMove);
 
   $("#lang-select").addEventListener("change", (e) => {
@@ -915,10 +967,24 @@ function wireEvents() {
   document.addEventListener("keydown", (e) => {
     if (handleShortcutAssignment(e)) return;
     handleGlobalShortcuts(e);
+    logEvent(e, "KeyDown", e.code);
   });
 
   document.addEventListener("mousedown", (e) => {
     showClickEffect(e.clientX, e.clientY);
+    logEvent(e, "MouseDown", `(${Math.round(e.clientX)}, ${Math.round(e.clientY)})`);
+  });
+
+  document.addEventListener("mouseup", (e) => {
+    logEvent(e, "MouseUp", `(${Math.round(e.clientX)}, ${Math.round(e.clientY)})`);
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!state.logMode) return;
+    if (!state._lastMoveLog || performance.now() - state._lastMoveLog > 80) {
+      state._lastMoveLog = performance.now();
+      logEvent(e, "MouseMove", `(${Math.round(e.clientX)}, ${Math.round(e.clientY)})`);
+    }
   });
 }
 
@@ -927,3 +993,4 @@ wireEvents();
 updateFullscreenState();
 render();
 setStatus(t("status.ready"));
+renderLog();
