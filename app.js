@@ -19,8 +19,8 @@ const i18n = {
     "status.fullscreen_on": "Fullscreen enabled",
     "status.fullscreen_off": "Fullscreen disabled",
     "status.fullscreen_failed": "Fullscreen request denied",
-    "status.pick_pos": "Click a position to capture coordinates",
-    "status.pos_captured": "Position captured",
+    "status.coord_on": "Coord mode on",
+    "status.coord_off": "Coord mode off",
     "status.no_macro": "No macro selected",
     "status.invalid_pos": "Invalid position",
     "status.event_added": "Manual event added",
@@ -47,7 +47,7 @@ const i18n = {
     "btn.save_ini": "Save key_macro.ini",
     "btn.load_ini": "Load key_macro.ini",
     "btn.fullscreen": "Enable Fullscreen",
-    "btn.pick_pos": "Pick Position",
+    "btn.coord_mode": "Coord Mode",
     "btn.add_event": "Add Event",
     "section.macros": "Macros",
     "section.recording": "Recording",
@@ -65,11 +65,12 @@ const i18n = {
     "label.fullscreen": "Fullscreen",
     "label.pos_x": "X",
     "label.pos_y": "Y",
+    "label.coord_mode": "Coord Mode",
     "label.action": "Action",
     "hint.recording": "Recording captures keyboard and mouse events while this page is focused.",
     "hint.shortcuts": "Click a shortcut and press a key to assign.",
     "hint.repeat": "Set 0 for infinite repeat until stopped.",
-    "hint.manual": "Pick a position on the screen, then add a mouse action at that coordinate.",
+    "hint.manual": "Enable Coord Mode to keep updating the position, then add a mouse action.",
     "action.mousedown": "Mouse Down",
     "action.mouseup": "Mouse Up",
     "action.click": "Click",
@@ -106,8 +107,8 @@ const i18n = {
     "status.fullscreen_on": "전체 화면이 활성화되었습니다",
     "status.fullscreen_off": "전체 화면이 해제되었습니다",
     "status.fullscreen_failed": "전체 화면 권한이 거부되었습니다",
-    "status.pick_pos": "좌표를 선택하려면 클릭하세요",
-    "status.pos_captured": "좌표가 저장되었습니다",
+    "status.coord_on": "좌표 모드 켜짐",
+    "status.coord_off": "좌표 모드 꺼짐",
     "status.no_macro": "선택된 매크로가 없습니다",
     "status.invalid_pos": "좌표가 올바르지 않습니다",
     "status.event_added": "수동 이벤트가 추가되었습니다",
@@ -134,7 +135,7 @@ const i18n = {
     "btn.save_ini": "key_macro.ini 저장",
     "btn.load_ini": "key_macro.ini 불러오기",
     "btn.fullscreen": "전체 화면 활성화",
-    "btn.pick_pos": "좌표 선택",
+    "btn.coord_mode": "좌표 모드",
     "btn.add_event": "이벤트 추가",
     "section.macros": "매크로",
     "section.recording": "기록",
@@ -152,11 +153,12 @@ const i18n = {
     "label.fullscreen": "전체 화면",
     "label.pos_x": "X",
     "label.pos_y": "Y",
+    "label.coord_mode": "좌표 모드",
     "label.action": "동작",
     "hint.recording": "이 페이지가 포커스일 때만 키보드/마우스가 기록됩니다.",
     "hint.shortcuts": "단축키를 클릭하고 키를 눌러 지정하세요.",
     "hint.repeat": "0으로 설정하면 해제할 때까지 무한 반복합니다.",
-    "hint.manual": "화면에서 좌표를 선택한 후, 해당 좌표에 마우스 동작을 추가합니다.",
+    "hint.manual": "좌표 모드를 켜서 위치를 계속 갱신한 뒤, 이벤트를 추가하세요.",
     "action.mousedown": "마우스 누름",
     "action.mouseup": "마우스 뗌",
     "action.click": "클릭",
@@ -192,7 +194,7 @@ const state = {
   fullScreenEnabled: false,
   runStart: 0,
   runTimerId: null,
-  awaitingPosition: false,
+  coordMode: false,
   shortcuts: {
     recordToggle: "KeyR",
     runToggle: "KeyT",
@@ -214,6 +216,7 @@ function saveState() {
     runEnabled: state.runEnabled,
     language: state.language,
     repeatCount: state.repeatCount,
+    coordMode: state.coordMode,
     shortcuts: state.shortcuts,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -235,6 +238,7 @@ function loadState() {
     state.runEnabled = data.runEnabled !== false;
     state.language = data.language || "en";
     state.repeatCount = Number.isFinite(data.repeatCount) ? data.repeatCount : 1;
+    state.coordMode = !!data.coordMode;
     state.shortcuts = { ...state.shortcuts, ...(data.shortcuts || {}) };
   } catch {
     state.macros = [{ id: crypto.randomUUID(), name: "Macro 1", events: [] }];
@@ -357,6 +361,7 @@ function renderIndicators() {
   $("#edit-mode").textContent = state.editMode ? t("state.on") : t("state.off");
   $("#run-enabled").textContent = state.runEnabled ? t("state.on") : t("state.off");
   $("#fullscreen-state").textContent = state.fullScreenEnabled ? t("state.on") : t("state.off");
+  $("#coord-mode").textContent = state.coordMode ? t("state.on") : t("state.off");
   $("#run-time").textContent = formatRunTime();
 
   const runBtn = $("#btn-run");
@@ -672,20 +677,11 @@ async function requestFullscreen() {
   }
 }
 
-function beginPickPosition() {
-  if (state.awaitingPosition) return;
-  state.awaitingPosition = true;
-  setStatus(t("status.pick_pos"));
-  const handler = (e) => {
-    if (!state.awaitingPosition) return;
-    e.preventDefault();
-    e.stopPropagation();
-    state.awaitingPosition = false;
-    $("#manual-x").value = Math.round(e.clientX);
-    $("#manual-y").value = Math.round(e.clientY);
-    setStatus(t("status.pos_captured"));
-  };
-  document.addEventListener("click", handler, { capture: true, once: true });
+function toggleCoordMode() {
+  state.coordMode = !state.coordMode;
+  saveState();
+  renderIndicators();
+  setStatus(state.coordMode ? t("status.coord_on") : t("status.coord_off"));
 }
 
 function addManualEvent() {
@@ -714,6 +710,12 @@ function addManualEvent() {
   saveState();
   renderIndicators();
   setStatus(t("status.event_added"));
+}
+
+function handleCoordMove(e) {
+  if (!state.coordMode) return;
+  $("#manual-x").value = Math.round(e.clientX);
+  $("#manual-y").value = Math.round(e.clientY);
 }
 
 function handleShortcutAssignment(e) {
@@ -898,8 +900,10 @@ function wireEvents() {
   $("#btn-fullscreen").addEventListener("click", requestFullscreen);
   document.addEventListener("fullscreenchange", updateFullscreenState);
 
-  $("#btn-pick-pos").addEventListener("click", beginPickPosition);
+  $("#btn-coord-mode").addEventListener("click", toggleCoordMode);
   $("#btn-add-event").addEventListener("click", addManualEvent);
+
+  document.addEventListener("mousemove", handleCoordMove);
 
   $("#lang-select").addEventListener("change", (e) => {
     state.language = e.target.value;
