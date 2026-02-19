@@ -49,6 +49,7 @@ const i18n = {
     "section.actions": "Macro Actions",
     "label.record": "[Record]",
     "label.events": "Events",
+    "label.run_time": "Run Time",
     "label.repeat_count": "Repeat Count",
     "label.run_wait": "Run Wait",
     "label.edit_mode": "Edit Mode",
@@ -120,6 +121,7 @@ const i18n = {
     "section.actions": "매크로 동작",
     "label.record": "[기록]",
     "label.events": "이벤트",
+    "label.run_time": "실행 시간",
     "label.repeat_count": "반복 횟수",
     "label.run_wait": "실행 대기",
     "label.edit_mode": "편집 모드",
@@ -158,6 +160,8 @@ const state = {
   language: "en",
   repeatCount: 1,
   fullScreenEnabled: false,
+  runStart: 0,
+  runTimerId: null,
   shortcuts: {
     recordToggle: "KeyR",
     runToggle: "KeyT",
@@ -322,6 +326,7 @@ function renderIndicators() {
   $("#edit-mode").textContent = state.editMode ? t("state.on") : t("state.off");
   $("#run-enabled").textContent = state.runEnabled ? t("state.on") : t("state.off");
   $("#fullscreen-state").textContent = state.fullScreenEnabled ? t("state.on") : t("state.off");
+  $("#run-time").textContent = formatRunTime();
 
   const runBtn = $("#btn-run");
   runBtn.textContent = state.running ? t("btn.run_stop") : t("btn.run");
@@ -469,11 +474,16 @@ function clearRunTimers() {
   while (runTimers.length) {
     clearTimeout(runTimers.pop());
   }
+  if (state.runTimerId) {
+    clearInterval(state.runTimerId);
+    state.runTimerId = null;
+  }
 }
 
 function stopRun(reasonKey) {
   if (!state.running) return;
   state.running = false;
+  state.runStart = 0;
   clearRunTimers();
   renderIndicators();
   setStatus(t(reasonKey || "status.run_stopped"));
@@ -499,6 +509,13 @@ function runMacro() {
   }
 
   state.running = true;
+  state.runStart = performance.now();
+  if (!state.runTimerId) {
+    state.runTimerId = setInterval(() => {
+      if (!state.running) return;
+      $("#run-time").textContent = formatRunTime();
+    }, 50);
+  }
   renderIndicators();
   setStatus(t("status.running"));
 
@@ -518,6 +535,7 @@ function runMacro() {
         runIteration(iteration + 1);
       } else {
         state.running = false;
+        state.runStart = 0;
         renderIndicators();
         setStatus(t("status.run_complete"));
       }
@@ -526,6 +544,18 @@ function runMacro() {
   };
 
   runIteration(1);
+}
+
+function formatRunTime() {
+  if (!state.running || !state.runStart) return "00:00.000";
+  const elapsed = performance.now() - state.runStart;
+  const minutes = Math.floor(elapsed / 60000);
+  const seconds = Math.floor((elapsed % 60000) / 1000);
+  const ms = Math.floor(elapsed % 1000);
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+  const mmm = String(ms).padStart(3, "0");
+  return `${mm}:${ss}.${mmm}`;
 }
 
 function replayEvent(evt) {
