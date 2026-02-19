@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wep Macro</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <h1>Wep Macro</h1>
+    <div class="status" id="status">Idle</div>
+
+    <div class="controls">
+      <button id="btn-record">Record</button>
+      <button id="btn-stop">Stop</button>
+      <button id="btn-run">Run</button>
+      <button id="btn-coord">Coord Mode</button>
+      <button id="btn-log">Log Mode</button>
+    </div>
+
+    <div class="row">
+      <label>Repeat</label>
+      <input id="repeat" type="number" min="0" value="1" />
+    </div>
+
+    <div class="row">
+      <label>Native Host</label>
+      <div id="native-status">Disconnected</div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
