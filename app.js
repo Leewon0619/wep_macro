@@ -19,6 +19,11 @@ const i18n = {
     "status.fullscreen_on": "Fullscreen enabled",
     "status.fullscreen_off": "Fullscreen disabled",
     "status.fullscreen_failed": "Fullscreen request denied",
+    "status.pick_pos": "Click a position to capture coordinates",
+    "status.pos_captured": "Position captured",
+    "status.no_macro": "No macro selected",
+    "status.invalid_pos": "Invalid position",
+    "status.event_added": "Manual event added",
     "status.edit_on_short": "Edit mode on",
     "status.edit_off_short": "Edit mode off",
     "status.run_enabled": "Run enabled",
@@ -42,11 +47,14 @@ const i18n = {
     "btn.save_ini": "Save key_macro.ini",
     "btn.load_ini": "Load key_macro.ini",
     "btn.fullscreen": "Enable Fullscreen",
+    "btn.pick_pos": "Pick Position",
+    "btn.add_event": "Add Event",
     "section.macros": "Macros",
     "section.recording": "Recording",
     "section.shortcuts": "Shortcuts",
     "section.files": "Files",
     "section.actions": "Macro Actions",
+    "section.manual": "Manual Macro",
     "label.record": "[Record]",
     "label.events": "Events",
     "label.run_time": "Run Time",
@@ -55,9 +63,16 @@ const i18n = {
     "label.edit_mode": "Edit Mode",
     "label.run_enabled": "Run Enabled",
     "label.fullscreen": "Fullscreen",
+    "label.pos_x": "X",
+    "label.pos_y": "Y",
+    "label.action": "Action",
     "hint.recording": "Recording captures keyboard and mouse events while this page is focused.",
     "hint.shortcuts": "Click a shortcut and press a key to assign.",
     "hint.repeat": "Set 0 for infinite repeat until stopped.",
+    "hint.manual": "Pick a position on the screen, then add a mouse action at that coordinate.",
+    "action.mousedown": "Mouse Down",
+    "action.mouseup": "Mouse Up",
+    "action.click": "Click",
     "shortcut.record": "Record Toggle",
     "shortcut.run": "Run",
     "shortcut.run_wait": "Run Wait Toggle",
@@ -91,6 +106,11 @@ const i18n = {
     "status.fullscreen_on": "전체 화면이 활성화되었습니다",
     "status.fullscreen_off": "전체 화면이 해제되었습니다",
     "status.fullscreen_failed": "전체 화면 권한이 거부되었습니다",
+    "status.pick_pos": "좌표를 선택하려면 클릭하세요",
+    "status.pos_captured": "좌표가 저장되었습니다",
+    "status.no_macro": "선택된 매크로가 없습니다",
+    "status.invalid_pos": "좌표가 올바르지 않습니다",
+    "status.event_added": "수동 이벤트가 추가되었습니다",
     "status.edit_on_short": "편집 모드 켜짐",
     "status.edit_off_short": "편집 모드 꺼짐",
     "status.run_enabled": "실행 활성화됨",
@@ -114,11 +134,14 @@ const i18n = {
     "btn.save_ini": "key_macro.ini 저장",
     "btn.load_ini": "key_macro.ini 불러오기",
     "btn.fullscreen": "전체 화면 활성화",
+    "btn.pick_pos": "좌표 선택",
+    "btn.add_event": "이벤트 추가",
     "section.macros": "매크로",
     "section.recording": "기록",
     "section.shortcuts": "단축키",
     "section.files": "파일",
     "section.actions": "매크로 동작",
+    "section.manual": "수동 매크로",
     "label.record": "[기록]",
     "label.events": "이벤트",
     "label.run_time": "실행 시간",
@@ -127,9 +150,16 @@ const i18n = {
     "label.edit_mode": "편집 모드",
     "label.run_enabled": "실행 가능",
     "label.fullscreen": "전체 화면",
+    "label.pos_x": "X",
+    "label.pos_y": "Y",
+    "label.action": "동작",
     "hint.recording": "이 페이지가 포커스일 때만 키보드/마우스가 기록됩니다.",
     "hint.shortcuts": "단축키를 클릭하고 키를 눌러 지정하세요.",
     "hint.repeat": "0으로 설정하면 해제할 때까지 무한 반복합니다.",
+    "hint.manual": "화면에서 좌표를 선택한 후, 해당 좌표에 마우스 동작을 추가합니다.",
+    "action.mousedown": "마우스 누름",
+    "action.mouseup": "마우스 뗌",
+    "action.click": "클릭",
     "shortcut.record": "기록 토글",
     "shortcut.run": "실행",
     "shortcut.run_wait": "실행 대기 토글",
@@ -162,6 +192,7 @@ const state = {
   fullScreenEnabled: false,
   runStart: 0,
   runTimerId: null,
+  awaitingPosition: false,
   shortcuts: {
     recordToggle: "KeyR",
     runToggle: "KeyT",
@@ -641,6 +672,50 @@ async function requestFullscreen() {
   }
 }
 
+function beginPickPosition() {
+  if (state.awaitingPosition) return;
+  state.awaitingPosition = true;
+  setStatus(t("status.pick_pos"));
+  const handler = (e) => {
+    if (!state.awaitingPosition) return;
+    e.preventDefault();
+    e.stopPropagation();
+    state.awaitingPosition = false;
+    $("#manual-x").value = Math.round(e.clientX);
+    $("#manual-y").value = Math.round(e.clientY);
+    setStatus(t("status.pos_captured"));
+  };
+  document.addEventListener("click", handler, { capture: true, once: true });
+}
+
+function addManualEvent() {
+  const macro = getSelectedMacro();
+  if (!macro) {
+    setStatus(t("status.no_macro"));
+    return;
+  }
+  const x = Number($("#manual-x").value);
+  const y = Number($("#manual-y").value);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    setStatus(t("status.invalid_pos"));
+    return;
+  }
+  const action = $("#manual-action").value;
+  const lastTs = macro.events.length ? macro.events[macro.events.length - 1].ts : 0;
+  const baseTs = lastTs + 50;
+  if (action === "click") {
+    macro.events.push(
+      { type: "mousedown", button: 0, x, y, ts: baseTs },
+      { type: "mouseup", button: 0, x, y, ts: baseTs + 20 }
+    );
+  } else {
+    macro.events.push({ type: action, button: 0, x, y, ts: baseTs });
+  }
+  saveState();
+  renderIndicators();
+  setStatus(t("status.event_added"));
+}
+
 function handleShortcutAssignment(e) {
   if (!state.awaitingShortcut) return false;
   e.preventDefault();
@@ -822,6 +897,9 @@ function wireEvents() {
 
   $("#btn-fullscreen").addEventListener("click", requestFullscreen);
   document.addEventListener("fullscreenchange", updateFullscreenState);
+
+  $("#btn-pick-pos").addEventListener("click", beginPickPosition);
+  $("#btn-add-event").addEventListener("click", addManualEvent);
 
   $("#lang-select").addEventListener("change", (e) => {
     state.language = e.target.value;
