@@ -76,6 +76,13 @@
     <section class="panel">
       <h2 data-i18n="section.actions">Macro Actions</h2>
       <div class="row">
+        <div class="label" data-i18n="label.repeat_count">Repeat Count</div>
+        <div class="value">
+          <input id="repeat-count" type="number" min="0" step="1" />
+        </div>
+      </div>
+      <p class="hint" data-i18n="hint.repeat">Set 0 for infinite repeat until stopped.</p>
+      <div class="row">
         <div class="label" data-i18n="label.run_wait">Run Wait</div>
         <div class="value" id="run-wait">Off</div>
       </div>
@@ -87,6 +94,11 @@
         <div class="label" data-i18n="label.run_enabled">Run Enabled</div>
         <div class="value" id="run-enabled">On</div>
       </div>
+      <div class="row">
+        <div class="label" data-i18n="label.fullscreen">Fullscreen</div>
+        <div class="value" id="fullscreen-state">Off</div>
+      </div>
+      <button id="btn-fullscreen" data-i18n="btn.fullscreen">Enable Fullscreen</button>
     </section>
   </div>
 

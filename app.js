@@ -12,9 +12,13 @@ const i18n = {
     "status.no_events": "No recorded events to run",
     "status.running": "Running macro...",
     "status.run_complete": "Run complete",
+    "status.run_stopped": "Run stopped",
     "status.run_wait_on": "Run wait enabled",
     "status.run_wait_off": "Run wait disabled",
     "status.run_wait_armed": "Run wait armed. Press Run again to execute.",
+    "status.fullscreen_on": "Fullscreen enabled",
+    "status.fullscreen_off": "Fullscreen disabled",
+    "status.fullscreen_failed": "Fullscreen request denied",
     "status.edit_on_short": "Edit mode on",
     "status.edit_off_short": "Edit mode off",
     "status.run_enabled": "Run enabled",
@@ -30,12 +34,14 @@ const i18n = {
     "btn.edit": "Edit",
     "btn.record": "Record",
     "btn.run": "Run",
+    "btn.run_stop": "Stop",
     "btn.add_macro": "Add Macro",
     "btn.delete_macro": "Delete Macro",
     "btn.save_m": "Save .m",
     "btn.load_m": "Load .m",
     "btn.save_ini": "Save key_macro.ini",
     "btn.load_ini": "Load key_macro.ini",
+    "btn.fullscreen": "Enable Fullscreen",
     "section.macros": "Macros",
     "section.recording": "Recording",
     "section.shortcuts": "Shortcuts",
@@ -43,11 +49,14 @@ const i18n = {
     "section.actions": "Macro Actions",
     "label.record": "[Record]",
     "label.events": "Events",
+    "label.repeat_count": "Repeat Count",
     "label.run_wait": "Run Wait",
     "label.edit_mode": "Edit Mode",
     "label.run_enabled": "Run Enabled",
+    "label.fullscreen": "Fullscreen",
     "hint.recording": "Recording captures keyboard and mouse events while this page is focused.",
     "hint.shortcuts": "Click a shortcut and press a key to assign.",
+    "hint.repeat": "Set 0 for infinite repeat until stopped.",
     "shortcut.record": "Record Toggle",
     "shortcut.run": "Run",
     "shortcut.run_wait": "Run Wait Toggle",
@@ -59,6 +68,7 @@ const i18n = {
     "state.off": "Off",
     "state.recording": "Recording",
     "state.idle": "Idle",
+    "state.running": "Running",
     "state.unassigned": "Unassigned",
     "macro.label": "Macro",
   },
@@ -73,9 +83,13 @@ const i18n = {
     "status.no_events": "실행할 기록이 없습니다",
     "status.running": "매크로 실행 중...",
     "status.run_complete": "실행 완료",
+    "status.run_stopped": "실행 중지됨",
     "status.run_wait_on": "실행 대기 켜짐",
     "status.run_wait_off": "실행 대기 꺼짐",
     "status.run_wait_armed": "실행 대기 준비됨. 다시 실행을 누르면 시작합니다.",
+    "status.fullscreen_on": "전체 화면이 활성화되었습니다",
+    "status.fullscreen_off": "전체 화면이 해제되었습니다",
+    "status.fullscreen_failed": "전체 화면 권한이 거부되었습니다",
     "status.edit_on_short": "편집 모드 켜짐",
     "status.edit_off_short": "편집 모드 꺼짐",
     "status.run_enabled": "실행 활성화됨",
@@ -91,12 +105,14 @@ const i18n = {
     "btn.edit": "편집",
     "btn.record": "기록",
     "btn.run": "실행",
+    "btn.run_stop": "중지",
     "btn.add_macro": "매크로 추가",
     "btn.delete_macro": "매크로 삭제",
     "btn.save_m": ".m 저장",
     "btn.load_m": ".m 불러오기",
     "btn.save_ini": "key_macro.ini 저장",
     "btn.load_ini": "key_macro.ini 불러오기",
+    "btn.fullscreen": "전체 화면 활성화",
     "section.macros": "매크로",
     "section.recording": "기록",
     "section.shortcuts": "단축키",
@@ -104,11 +120,14 @@ const i18n = {
     "section.actions": "매크로 동작",
     "label.record": "[기록]",
     "label.events": "이벤트",
+    "label.repeat_count": "반복 횟수",
     "label.run_wait": "실행 대기",
     "label.edit_mode": "편집 모드",
     "label.run_enabled": "실행 가능",
+    "label.fullscreen": "전체 화면",
     "hint.recording": "이 페이지가 포커스일 때만 키보드/마우스가 기록됩니다.",
     "hint.shortcuts": "단축키를 클릭하고 키를 눌러 지정하세요.",
+    "hint.repeat": "0으로 설정하면 해제할 때까지 무한 반복합니다.",
     "shortcut.record": "기록 토글",
     "shortcut.run": "실행",
     "shortcut.run_wait": "실행 대기 토글",
@@ -120,6 +139,7 @@ const i18n = {
     "state.off": "Off",
     "state.recording": "기록 중",
     "state.idle": "대기",
+    "state.running": "실행 중",
     "state.unassigned": "미지정",
     "macro.label": "매크로",
   },
@@ -136,6 +156,8 @@ const state = {
   awaitingShortcut: null,
   recordStart: 0,
   language: "en",
+  repeatCount: 1,
+  fullScreenEnabled: false,
   shortcuts: {
     recordToggle: "KeyR",
     runToggle: "KeyT",
@@ -146,6 +168,7 @@ const state = {
 };
 
 const STORAGE_KEY = "macro_state_v1";
+const runTimers = [];
 
 function saveState() {
   const payload = {
@@ -155,6 +178,7 @@ function saveState() {
     editMode: state.editMode,
     runEnabled: state.runEnabled,
     language: state.language,
+    repeatCount: state.repeatCount,
     shortcuts: state.shortcuts,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -175,6 +199,7 @@ function loadState() {
     state.editMode = !!data.editMode;
     state.runEnabled = data.runEnabled !== false;
     state.language = data.language || "en";
+    state.repeatCount = Number.isFinite(data.repeatCount) ? data.repeatCount : 1;
     state.shortcuts = { ...state.shortcuts, ...(data.shortcuts || {}) };
   } catch {
     state.macros = [{ id: crypto.randomUUID(), name: "Macro 1", events: [] }];
@@ -296,6 +321,11 @@ function renderIndicators() {
   $("#run-wait").textContent = state.runWait ? t("state.on") : t("state.off");
   $("#edit-mode").textContent = state.editMode ? t("state.on") : t("state.off");
   $("#run-enabled").textContent = state.runEnabled ? t("state.on") : t("state.off");
+  $("#fullscreen-state").textContent = state.fullScreenEnabled ? t("state.on") : t("state.off");
+
+  const runBtn = $("#btn-run");
+  runBtn.textContent = state.running ? t("btn.run_stop") : t("btn.run");
+  runBtn.classList.toggle("active", state.running);
 
   const onOffBtn = $("#btn-onoff");
   onOffBtn.textContent = state.runEnabled ? t("btn.on") : t("btn.off_edit");
@@ -303,6 +333,11 @@ function renderIndicators() {
 
   $("#btn-edit").classList.toggle("active", state.editMode);
   $("#btn-record").classList.toggle("active", state.recording);
+
+  const repeatInput = $("#repeat-count");
+  if (repeatInput && String(repeatInput.value) !== String(state.repeatCount)) {
+    repeatInput.value = String(state.repeatCount);
+  }
 }
 
 function render() {
@@ -430,7 +465,25 @@ function detachRecordListeners() {
   document.removeEventListener("mousemove", recordHandlers.mousemove);
 }
 
+function clearRunTimers() {
+  while (runTimers.length) {
+    clearTimeout(runTimers.pop());
+  }
+}
+
+function stopRun(reasonKey) {
+  if (!state.running) return;
+  state.running = false;
+  clearRunTimers();
+  renderIndicators();
+  setStatus(t(reasonKey || "status.run_stopped"));
+}
+
 function runMacro() {
+  if (state.running) {
+    stopRun("status.run_stopped");
+    return;
+  }
   if (!state.runEnabled) {
     setStatus(t("status.run_disabled"));
     return;
@@ -446,17 +499,33 @@ function runMacro() {
   }
 
   state.running = true;
+  renderIndicators();
   setStatus(t("status.running"));
 
-  macro.events.forEach((evt) => {
-    setTimeout(() => replayEvent(evt), evt.ts);
-  });
+  const repeatCount = Number.isFinite(state.repeatCount) ? Math.max(0, state.repeatCount) : 1;
 
-  const total = macro.events[macro.events.length - 1].ts;
-  setTimeout(() => {
-    state.running = false;
-    setStatus(t("status.run_complete"));
-  }, total + 20);
+  const runIteration = (iteration) => {
+    if (!state.running) return;
+    macro.events.forEach((evt) => {
+      const timer = setTimeout(() => replayEvent(evt), evt.ts);
+      runTimers.push(timer);
+    });
+    const total = macro.events[macro.events.length - 1].ts;
+    const doneTimer = setTimeout(() => {
+      if (!state.running) return;
+      const shouldContinue = repeatCount === 0 || iteration < repeatCount;
+      if (shouldContinue) {
+        runIteration(iteration + 1);
+      } else {
+        state.running = false;
+        renderIndicators();
+        setStatus(t("status.run_complete"));
+      }
+    }, total + 20);
+    runTimers.push(doneTimer);
+  };
+
+  runIteration(1);
 }
 
 function replayEvent(evt) {
@@ -490,6 +559,7 @@ function toggleEdit() {
   state.editMode = !state.editMode;
   if (state.editMode) {
     state.runEnabled = false;
+    stopRun("status.run_stopped");
   }
   saveState();
   render();
@@ -500,6 +570,7 @@ function toggleOnOff() {
   state.runEnabled = !state.runEnabled;
   if (!state.runEnabled) {
     state.editMode = true;
+    stopRun("status.run_stopped");
   }
   if (state.runEnabled) {
     state.editMode = false;
@@ -507,6 +578,25 @@ function toggleOnOff() {
   saveState();
   renderIndicators();
   setStatus(state.runEnabled ? t("status.run_enabled") : t("status.run_disabled_edit"));
+}
+
+function updateFullscreenState() {
+  state.fullScreenEnabled = !!document.fullscreenElement;
+  renderIndicators();
+}
+
+async function requestFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      setStatus(t("status.fullscreen_on"));
+    } else {
+      await document.exitFullscreen();
+      setStatus(t("status.fullscreen_off"));
+    }
+  } catch {
+    setStatus(t("status.fullscreen_failed"));
+  }
 }
 
 function handleShortcutAssignment(e) {
@@ -604,6 +694,7 @@ function saveIniFile() {
     `runWait=${state.runWait}`,
     `editMode=${state.editMode}`,
     `runEnabled=${state.runEnabled}`,
+    `repeatCount=${state.repeatCount}`,
   ];
   const blob = new Blob([lines.join("\n")], { type: "text/plain" });
   downloadBlob(blob, "key_macro.ini");
@@ -623,6 +714,10 @@ function loadIniFile(file) {
         if (parsed.settings.runWait !== undefined) state.runWait = parsed.settings.runWait === "true";
         if (parsed.settings.editMode !== undefined) state.editMode = parsed.settings.editMode === "true";
         if (parsed.settings.runEnabled !== undefined) state.runEnabled = parsed.settings.runEnabled === "true";
+        if (parsed.settings.repeatCount !== undefined) {
+          const parsedRepeat = Number(parsed.settings.repeatCount);
+          state.repeatCount = Number.isFinite(parsedRepeat) ? Math.max(0, parsedRepeat) : 1;
+        }
       }
       saveState();
       render();
@@ -676,6 +771,16 @@ function wireEvents() {
   $("#btn-save-ini").addEventListener("click", saveIniFile);
   $("#file-ini").addEventListener("change", (e) => loadIniFile(e.target.files[0]));
 
+  $("#repeat-count").addEventListener("change", (e) => {
+    const value = Number(e.target.value);
+    state.repeatCount = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 1;
+    saveState();
+    renderIndicators();
+  });
+
+  $("#btn-fullscreen").addEventListener("click", requestFullscreen);
+  document.addEventListener("fullscreenchange", updateFullscreenState);
+
   $("#lang-select").addEventListener("change", (e) => {
     state.language = e.target.value;
     saveState();
@@ -691,5 +796,6 @@ function wireEvents() {
 
 loadState();
 wireEvents();
+updateFullscreenState();
 render();
 setStatus(t("status.ready"));

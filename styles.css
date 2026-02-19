@@ -135,6 +135,22 @@ button:disabled {
   color: var(--muted);
 }
 
+.row input {
+  width: 90px;
+  background: #0b0f14;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 12px;
+  text-align: right;
+}
+
+.panel button {
+  margin-top: 8px;
+}
+
 .label {
   color: var(--text);
 }
