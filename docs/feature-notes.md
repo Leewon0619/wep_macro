@@ -8,7 +8,7 @@
 - Macro recording (Record).
 - Save/load recorded actions to a macro file (`.m`).
 - Macro execution (Run).
-- Save user settings to `key_macro.ini`.
+- Save user settings to `wep_macro.ini`.
 
 ## UI Requirements
 - Macro list with numbering format `Macro %d`.

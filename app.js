@@ -44,8 +44,8 @@ const i18n = {
     "btn.delete_macro": "Delete Macro",
     "btn.save_m": "Save .m",
     "btn.load_m": "Load .m",
-    "btn.save_ini": "Save key_macro.ini",
-    "btn.load_ini": "Load key_macro.ini",
+    "btn.save_ini": "Save wep_macro.ini",
+    "btn.load_ini": "Load wep_macro.ini",
     "btn.fullscreen": "Enable Fullscreen",
     "btn.coord_mode": "Coord Mode",
     "btn.add_event": "Add Event",
@@ -141,8 +141,8 @@ const i18n = {
     "btn.delete_macro": "매크로 삭제",
     "btn.save_m": ".m 저장",
     "btn.load_m": ".m 불러오기",
-    "btn.save_ini": "key_macro.ini 저장",
-    "btn.load_ini": "key_macro.ini 불러오기",
+    "btn.save_ini": "wep_macro.ini 저장",
+    "btn.load_ini": "wep_macro.ini 불러오기",
     "btn.fullscreen": "전체 화면 활성화",
     "btn.coord_mode": "좌표 모드",
     "btn.add_event": "이벤트 추가",
@@ -919,7 +919,7 @@ function saveIniFile() {
     `repeatCount=${state.repeatCount}`,
   ];
   const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-  downloadBlob(blob, "key_macro.ini");
+  downloadBlob(blob, "wep_macro.ini");
 }
 
 function loadIniFile(file) {
