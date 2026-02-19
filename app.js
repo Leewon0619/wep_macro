@@ -86,6 +86,8 @@ const i18n = {
     "shortcut.run_wait": "Run Wait Toggle",
     "shortcut.edit": "Edit Toggle",
     "shortcut.onoff": "On/Off Toggle",
+    "shortcut.coord": "Coord Mode Toggle",
+    "shortcut.log": "Log Mode Toggle",
     "shortcut.set": "Set",
     "shortcut.press_key": "Press a key...",
     "state.on": "On",
@@ -181,6 +183,8 @@ const i18n = {
     "shortcut.run_wait": "실행 대기 토글",
     "shortcut.edit": "편집 토글",
     "shortcut.onoff": "On/Off 토글",
+    "shortcut.coord": "좌표 모드 토글",
+    "shortcut.log": "로그 모드 토글",
     "shortcut.set": "설정",
     "shortcut.press_key": "키를 누르세요...",
     "state.on": "On",
@@ -219,6 +223,8 @@ const state = {
     runWaitToggle: "KeyW",
     editToggle: "KeyE",
     onOffToggle: "KeyO",
+    coordModeToggle: "KeyC",
+    logModeToggle: "KeyL",
   },
 };
 
@@ -339,6 +345,8 @@ function renderShortcuts() {
     { key: "runWaitToggle", label: t("shortcut.run_wait") },
     { key: "editToggle", label: t("shortcut.edit") },
     { key: "onOffToggle", label: t("shortcut.onoff") },
+    { key: "coordModeToggle", label: t("shortcut.coord") },
+    { key: "logModeToggle", label: t("shortcut.log") },
   ];
   items.forEach((item) => {
     const row = document.createElement("div");
@@ -845,6 +853,16 @@ function handleGlobalShortcuts(e) {
   if (e.code === shortcuts.onOffToggle) {
     e.preventDefault();
     toggleOnOff();
+    return;
+  }
+  if (e.code === shortcuts.coordModeToggle) {
+    e.preventDefault();
+    toggleCoordMode();
+    return;
+  }
+  if (e.code === shortcuts.logModeToggle) {
+    e.preventDefault();
+    toggleLogMode();
   }
 }
 
@@ -891,6 +909,8 @@ function saveIniFile() {
     `runWaitToggle=${state.shortcuts.runWaitToggle}`,
     `editToggle=${state.shortcuts.editToggle}`,
     `onOffToggle=${state.shortcuts.onOffToggle}`,
+    `coordModeToggle=${state.shortcuts.coordModeToggle}`,
+    `logModeToggle=${state.shortcuts.logModeToggle}`,
     "",
     "[settings]",
     `runWait=${state.runWait}`,
