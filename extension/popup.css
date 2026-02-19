@@ -70,3 +70,16 @@ input {
 #file-m {
   width: 140px;
 }
+
+.log {
+  margin-top: 8px;
+  background: #0b0f14;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  height: 120px;
+  overflow: auto;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: pre-wrap;
+}

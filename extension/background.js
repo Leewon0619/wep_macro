@@ -5,6 +5,7 @@ let lastMacro = null;
 let logMode = false;
 let coordMode = false;
 let nativeConnected = false;
+let nativePort = null;
 
 async function sendToActiveTab(message) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -12,17 +13,44 @@ async function sendToActiveTab(message) {
   chrome.tabs.sendMessage(tab.id, message);
 }
 
-function sendToNative(message) {
+function ensureNativePort() {
+  if (nativePort) return;
   try {
-    chrome.runtime.sendNativeMessage(HOST_NAME, message, (response) => {
-      if (chrome.runtime.lastError) {
-        nativeConnected = false;
-        return;
-      }
-      nativeConnected = true;
+    nativePort = chrome.runtime.connectNative(HOST_NAME);
+    nativePort.onMessage.addListener((msg) => {
+      handleNativeMessage(msg);
     });
+    nativePort.onDisconnect.addListener(() => {
+      nativePort = null;
+      nativeConnected = false;
+    });
+    nativeConnected = true;
+  } catch {
+    nativePort = null;
+    nativeConnected = false;
+  }
+}
+
+function sendToNative(message) {
+  ensureNativePort();
+  if (nativePort) {
+    nativePort.postMessage(message);
+    return;
+  }
+  try {
+    chrome.runtime.sendNativeMessage(HOST_NAME, message);
   } catch {
     nativeConnected = false;
+  }
+}
+
+function handleNativeMessage(msg) {
+  if (!msg?.type) return;
+  if (msg.type === "status") {
+    chrome.runtime.sendMessage({ type: "nativeStatus", payload: msg.payload });
+  }
+  if (msg.type === "log") {
+    chrome.runtime.sendMessage({ type: "nativeLog", payload: msg.payload });
   }
 }
 
@@ -42,6 +70,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== "popupCommand") return;
   const { command, repeat, macro } = msg.payload;
+
+  ensureNativePort();
 
   if (command === "recordStart") {
     recording = true;
@@ -76,3 +106,4 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   sendResponse({ ok: true, recording, coordMode, logMode, nativeConnected });
 });
+ensureNativePort();

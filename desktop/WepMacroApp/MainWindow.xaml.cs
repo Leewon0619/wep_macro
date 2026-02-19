@@ -98,6 +98,7 @@ public partial class MainWindow : Window
             }
             LogOutput.Text = string.Join(Environment.NewLine, _logBuffer);
             LogOutput.ScrollToEnd();
+            _bridge.SendToExtension(new { type = "log", payload = message });
         });
     }
 
@@ -212,6 +213,7 @@ public partial class MainWindow : Window
         _runStopwatch.Reset();
         UpdateRunTime();
         UpdateUI();
+        _bridge.SendToExtension(new { type = "status", payload = "Run stopped" });
     }
 
     private void AddMacro_Click(object sender, RoutedEventArgs e)
@@ -402,6 +404,7 @@ public partial class MainWindow : Window
         _recording = true;
         _recordWatch.Restart();
         StatusText.Text = "Recording...";
+        _bridge.SendToExtension(new { type = "status", payload = "Recording..." });
         UpdateUI();
     }
 
@@ -410,6 +413,7 @@ public partial class MainWindow : Window
         _recording = false;
         _recordWatch.Stop();
         StatusText.Text = "Recording stopped";
+        _bridge.SendToExtension(new { type = "status", payload = "Recording stopped" });
         UpdateUI();
     }
 
@@ -423,11 +427,13 @@ public partial class MainWindow : Window
         if (!_runEnabled)
         {
             StatusText.Text = "Run disabled";
+            _bridge.SendToExtension(new { type = "status", payload = "Run disabled" });
             return;
         }
         if (_editMode)
         {
             StatusText.Text = "Edit mode enabled";
+            _bridge.SendToExtension(new { type = "status", payload = "Edit mode enabled" });
             return;
         }
 
@@ -435,6 +441,7 @@ public partial class MainWindow : Window
         if (macro == null || macro.Events.Count == 0)
         {
             StatusText.Text = "No events to run";
+            _bridge.SendToExtension(new { type = "status", payload = "No events to run" });
             return;
         }
 
@@ -446,6 +453,7 @@ public partial class MainWindow : Window
         _runStopwatch.Restart();
         _runTimer.Start();
         UpdateUI();
+        _bridge.SendToExtension(new { type = "status", payload = "Running..." });
 
         try
         {
@@ -467,11 +475,13 @@ public partial class MainWindow : Window
         {
             _coordTimer.Start();
             StatusText.Text = "Coord mode on";
+            _bridge.SendToExtension(new { type = "status", payload = "Coord mode on" });
         }
         else
         {
             _coordTimer.Stop();
             StatusText.Text = "Coord mode off";
+            _bridge.SendToExtension(new { type = "status", payload = "Coord mode off" });
         }
         UpdateUI();
     }
@@ -480,6 +490,7 @@ public partial class MainWindow : Window
     {
         _logMode = !_logMode;
         StatusText.Text = _logMode ? "Log mode on" : "Log mode off";
+        _bridge.SendToExtension(new { type = "status", payload = _logMode ? "Log mode on" : "Log mode off" });
         UpdateUI();
     }
 

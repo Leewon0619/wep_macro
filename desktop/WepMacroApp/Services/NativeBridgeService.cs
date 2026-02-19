@@ -6,7 +6,8 @@ namespace WepMacroApp.Services;
 
 public sealed class NativeBridgeService : IDisposable
 {
-    private const string PipeName = "wep_macro_pipe";
+    private const string PipeIn = "wep_macro_pipe";
+    private const string PipeOut = "wep_macro_pipe_out";
     private CancellationTokenSource? _cts;
     private Task? _listenerTask;
 
@@ -23,7 +24,7 @@ public sealed class NativeBridgeService : IDisposable
     {
         while (!token.IsCancellationRequested)
         {
-            using var server = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            using var server = new NamedPipeServerStream(PipeIn, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
             await server.WaitForConnectionAsync(token);
 
             using var ms = new MemoryStream();
@@ -47,6 +48,22 @@ public sealed class NativeBridgeService : IDisposable
             catch
             {
             }
+        }
+    }
+
+    public void SendToExtension(object payload)
+    {
+        try
+        {
+            using var client = new NamedPipeClientStream(".", PipeOut, PipeDirection.Out);
+            client.Connect(500);
+            var json = JsonSerializer.Serialize(payload);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            client.Write(bytes, 0, bytes.Length);
+            client.Flush();
+        }
+        catch
+        {
         }
     }
 

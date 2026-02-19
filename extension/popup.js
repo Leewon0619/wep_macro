@@ -1,6 +1,9 @@
 const statusEl = document.getElementById("status");
 const nativeStatusEl = document.getElementById("native-status");
 const repeatEl = document.getElementById("repeat");
+const nativeLogEl = document.getElementById("native-log");
+const nativeLogBuffer = [];
+const nativeLogMax = 80;
 
 async function send(command) {
   const response = await chrome.runtime.sendMessage({
@@ -34,5 +37,19 @@ document.getElementById("file-m").addEventListener("change", async (e) => {
     statusEl.textContent = "Invalid macro file";
   } finally {
     e.target.value = "";
+  }
+});
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "nativeStatus") {
+    statusEl.textContent = msg.payload;
+  }
+  if (msg.type === "nativeLog") {
+    nativeLogBuffer.push(msg.payload);
+    if (nativeLogBuffer.length > nativeLogMax) {
+      nativeLogBuffer.splice(0, nativeLogBuffer.length - nativeLogMax);
+    }
+    nativeLogEl.textContent = nativeLogBuffer.join("\n");
+    nativeLogEl.scrollTop = nativeLogEl.scrollHeight;
   }
 });
