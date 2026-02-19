@@ -453,6 +453,7 @@ const recordHandlers = {
   mousedown: null,
   mouseup: null,
   mousemove: null,
+  wheel: null,
 };
 
 function attachRecordListeners() {
@@ -511,12 +512,25 @@ function attachRecordListeners() {
     });
     renderIndicators();
   };
+  recordHandlers.wheel = (e) => {
+    if (state.awaitingShortcut) return;
+    macro.events.push({
+      type: "wheel",
+      x: e.clientX,
+      y: e.clientY,
+      deltaX: e.deltaX,
+      deltaY: e.deltaY,
+      ts: performance.now() - state.recordStart,
+    });
+    renderIndicators();
+  };
 
   document.addEventListener("keydown", recordHandlers.keydown);
   document.addEventListener("keyup", recordHandlers.keyup);
   document.addEventListener("mousedown", recordHandlers.mousedown);
   document.addEventListener("mouseup", recordHandlers.mouseup);
   document.addEventListener("mousemove", recordHandlers.mousemove);
+  document.addEventListener("wheel", recordHandlers.wheel, { passive: true });
 }
 
 function detachRecordListeners() {
@@ -525,6 +539,7 @@ function detachRecordListeners() {
   document.removeEventListener("mousedown", recordHandlers.mousedown);
   document.removeEventListener("mouseup", recordHandlers.mouseup);
   document.removeEventListener("mousemove", recordHandlers.mousemove);
+  document.removeEventListener("wheel", recordHandlers.wheel);
 }
 
 function clearRunTimers() {
@@ -632,6 +647,16 @@ function replayEvent(evt) {
       button: evt.button,
       clientX: evt.x,
       clientY: evt.y,
+      bubbles: true,
+    });
+    document.dispatchEvent(event);
+  }
+  if (evt.type === "wheel") {
+    const event = new WheelEvent("wheel", {
+      clientX: evt.x,
+      clientY: evt.y,
+      deltaX: evt.deltaX,
+      deltaY: evt.deltaY,
       bubbles: true,
     });
     document.dispatchEvent(event);
@@ -986,6 +1011,16 @@ function wireEvents() {
 
   document.addEventListener("mouseup", (e) => {
     logEvent(e, "MouseUp", `(${Math.round(e.clientX)}, ${Math.round(e.clientY)})`);
+  });
+
+  document.addEventListener("wheel", (e) => {
+    logEvent(
+      e,
+      "Wheel",
+      `(${Math.round(e.clientX)}, ${Math.round(e.clientY)}) dx=${Math.round(e.deltaX)} dy=${Math.round(
+        e.deltaY
+      )}`
+    );
   });
 
   document.addEventListener("mousemove", (e) => {
