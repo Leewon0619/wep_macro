@@ -55,6 +55,7 @@ public partial class MainWindow : Window
         _coordTimer.Tick += (_, _) => UpdateCoordPosition();
 
         UpdateUI();
+        UpdateAdminState();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -130,6 +131,17 @@ public partial class MainWindow : Window
         EditButton.Content = _editMode ? "Edit (On)" : "Edit";
         CoordModeText.Text = _coordMode ? "On" : "Off";
         LogModeText.Text = _logMode ? "On" : "Off";
+    }
+
+    private void UpdateAdminState()
+    {
+        var isAdmin = new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent())
+            .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+        AdminButton.IsEnabled = !isAdmin;
+        if (!isAdmin)
+        {
+            StatusText.Text = "Some apps require admin privileges for global hooks.";
+        }
     }
 
     private void RegisterHotkeys()
@@ -412,6 +424,27 @@ public partial class MainWindow : Window
         else if (repeat < 0)
         {
             RepeatCountBox.Text = "0";
+        }
+    }
+
+    private void RunAsAdmin_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var exePath = Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrWhiteSpace(exePath)) return;
+
+            var psi = new ProcessStartInfo(exePath)
+            {
+                UseShellExecute = true,
+                Verb = "runas"
+            };
+            Process.Start(psi);
+            Application.Current.Shutdown();
+        }
+        catch
+        {
+            StatusText.Text = "Admin permission was denied.";
         }
     }
 
