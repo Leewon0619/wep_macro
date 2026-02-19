@@ -489,6 +489,15 @@ public partial class MainWindow : Window
         {
             switch (msg.Type)
             {
+                case "macroSet":
+                    if (msg.Macro != null)
+                    {
+                        _macros.Add(msg.Macro);
+                        MacroList.SelectedItem = msg.Macro;
+                        StatusText.Text = "Macro loaded from extension";
+                        UpdateUI();
+                    }
+                    break;
                 case "recordStart":
                     StartRecording();
                     break;

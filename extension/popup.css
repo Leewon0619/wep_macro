@@ -66,3 +66,7 @@ input {
   border-radius: 6px;
   padding: 4px 6px;
 }
+
+#file-m {
+  width: 140px;
+}

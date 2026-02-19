@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== "popupCommand") return;
-  const { command, repeat } = msg.payload;
+  const { command, repeat, macro } = msg.payload;
 
   if (command === "recordStart") {
     recording = true;
@@ -56,6 +56,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (command === "run") {
     sendToActiveTab({ type: "run", repeat });
     sendToNative({ type: "run", repeat, macro: lastMacro });
+  }
+  if (command === "loadMacro") {
+    if (macro?.macro) {
+      lastMacro = macro;
+      chrome.storage.local.set({ lastMacro });
+      sendToNative({ type: "macroSet", macro });
+    }
   }
   if (command === "coordToggle") {
     coordMode = !coordMode;
