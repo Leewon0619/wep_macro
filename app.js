@@ -208,6 +208,7 @@ const recordHandlers = {
   keyup: null,
   mousedown: null,
   mouseup: null,
+  mousemove: null,
 };
 
 function attachRecordListeners() {
@@ -256,11 +257,22 @@ function attachRecordListeners() {
     });
     renderIndicators();
   };
+  recordHandlers.mousemove = (e) => {
+    if (state.awaitingShortcut) return;
+    macro.events.push({
+      type: "mousemove",
+      x: e.clientX,
+      y: e.clientY,
+      ts: performance.now() - state.recordStart,
+    });
+    renderIndicators();
+  };
 
   document.addEventListener("keydown", recordHandlers.keydown);
   document.addEventListener("keyup", recordHandlers.keyup);
   document.addEventListener("mousedown", recordHandlers.mousedown);
   document.addEventListener("mouseup", recordHandlers.mouseup);
+  document.addEventListener("mousemove", recordHandlers.mousemove);
 }
 
 function detachRecordListeners() {
@@ -268,6 +280,7 @@ function detachRecordListeners() {
   document.removeEventListener("keyup", recordHandlers.keyup);
   document.removeEventListener("mousedown", recordHandlers.mousedown);
   document.removeEventListener("mouseup", recordHandlers.mouseup);
+  document.removeEventListener("mousemove", recordHandlers.mousemove);
 }
 
 function runMacro() {
