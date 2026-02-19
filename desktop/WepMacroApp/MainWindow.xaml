@@ -24,6 +24,9 @@
       <Button Width="90" Content="Delete Macro" Click="DeleteMacro_Click" />
     </StackPanel>
 
+    <TextBlock Grid.Row="1" Margin="8,36,0,0" Foreground="Gray"
+               Text="Hotkeys: Ctrl+Alt+R Record, Ctrl+Alt+P Run, Ctrl+Alt+C Coord, Ctrl+Alt+L Log" />
+
     <Grid Grid.Row="2">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="2*" />

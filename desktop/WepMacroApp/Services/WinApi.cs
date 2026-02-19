@@ -20,6 +20,7 @@ internal static class WinApi
     public const int WM_MBUTTONUP = 0x0208;
     public const int WM_MOUSEMOVE = 0x0200;
     public const int WM_MOUSEWHEEL = 0x020A;
+    public const int WM_HOTKEY = 0x0312;
 
     public const uint INPUT_MOUSE = 0;
     public const uint INPUT_KEYBOARD = 1;
@@ -39,6 +40,11 @@ internal static class WinApi
     public const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
     public const int SM_CXSCREEN = 0;
     public const int SM_CYSCREEN = 1;
+
+    public const uint MOD_ALT = 0x0001;
+    public const uint MOD_CONTROL = 0x0002;
+    public const uint MOD_SHIFT = 0x0004;
+    public const uint MOD_WIN = 0x0008;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT
@@ -86,6 +92,12 @@ internal static class WinApi
 
     [DllImport("user32.dll")]
     public static extern int GetSystemMetrics(int nIndex);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool UnregisterHotKey(nint hWnd, int id);
 
     [DllImport("user32.dll")]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);

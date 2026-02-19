@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using System.Windows.Interop;
 using Microsoft.Win32;
 using WepMacroApp.Models;
 using WepMacroApp.Services;
@@ -27,6 +28,11 @@ public partial class MainWindow : Window
     private bool _coordMode;
     private bool _logMode;
     private CancellationTokenSource? _runCts;
+    private HwndSource? _hwndSource;
+    private const int HotkeyRecord = 1;
+    private const int HotkeyRun = 2;
+    private const int HotkeyCoord = 3;
+    private const int HotkeyLog = 4;
 
     public MainWindow()
     {
@@ -49,6 +55,14 @@ public partial class MainWindow : Window
         _coordTimer.Tick += (_, _) => UpdateCoordPosition();
 
         UpdateUI();
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        _hwndSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+        _hwndSource?.AddHook(WndProc);
+        RegisterHotkeys();
     }
 
     private Macro? CurrentMacro => MacroList.SelectedItem as Macro;
@@ -116,6 +130,51 @@ public partial class MainWindow : Window
         EditButton.Content = _editMode ? "Edit (On)" : "Edit";
         CoordModeText.Text = _coordMode ? "On" : "Off";
         LogModeText.Text = _logMode ? "On" : "Off";
+    }
+
+    private void RegisterHotkeys()
+    {
+        if (_hwndSource == null) return;
+        var handle = _hwndSource.Handle;
+        WinApi.RegisterHotKey(handle, HotkeyRecord, WinApi.MOD_CONTROL | WinApi.MOD_ALT, (uint)KeyInterop.VirtualKeyFromKey(System.Windows.Input.Key.R));
+        WinApi.RegisterHotKey(handle, HotkeyRun, WinApi.MOD_CONTROL | WinApi.MOD_ALT, (uint)KeyInterop.VirtualKeyFromKey(System.Windows.Input.Key.P));
+        WinApi.RegisterHotKey(handle, HotkeyCoord, WinApi.MOD_CONTROL | WinApi.MOD_ALT, (uint)KeyInterop.VirtualKeyFromKey(System.Windows.Input.Key.C));
+        WinApi.RegisterHotKey(handle, HotkeyLog, WinApi.MOD_CONTROL | WinApi.MOD_ALT, (uint)KeyInterop.VirtualKeyFromKey(System.Windows.Input.Key.L));
+    }
+
+    private void UnregisterHotkeys()
+    {
+        if (_hwndSource == null) return;
+        var handle = _hwndSource.Handle;
+        WinApi.UnregisterHotKey(handle, HotkeyRecord);
+        WinApi.UnregisterHotKey(handle, HotkeyRun);
+        WinApi.UnregisterHotKey(handle, HotkeyCoord);
+        WinApi.UnregisterHotKey(handle, HotkeyLog);
+    }
+
+    private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    {
+        if (msg == WinApi.WM_HOTKEY)
+        {
+            var id = wParam.ToInt32();
+            handled = true;
+            switch (id)
+            {
+                case HotkeyRecord:
+                    Record_Click(this, new RoutedEventArgs());
+                    break;
+                case HotkeyRun:
+                    Run_Click(this, new RoutedEventArgs());
+                    break;
+                case HotkeyCoord:
+                    CoordMode_Click(this, new RoutedEventArgs());
+                    break;
+                case HotkeyLog:
+                    LogMode_Click(this, new RoutedEventArgs());
+                    break;
+            }
+        }
+        return IntPtr.Zero;
     }
 
     private void Record_Click(object sender, RoutedEventArgs e)
@@ -360,6 +419,8 @@ public partial class MainWindow : Window
     {
         _hookService.Dispose();
         _runCts?.Cancel();
+        UnregisterHotkeys();
+        _hwndSource?.RemoveHook(WndProc);
         base.OnClosed(e);
     }
 }
