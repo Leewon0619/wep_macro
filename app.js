@@ -1,5 +1,130 @@
 const $ = (sel) => document.querySelector(sel);
 
+const i18n = {
+  en: {
+    title: "Macro Program",
+    language: "Language",
+    "status.ready": "Ready",
+    "status.recording": "Recording... Click Record or press shortcut to stop",
+    "status.recording_stopped": "Recording stopped",
+    "status.run_disabled": "Run disabled (Off/Edit)",
+    "status.edit_on": "Edit mode is on. Turn it off to run.",
+    "status.no_events": "No recorded events to run",
+    "status.running": "Running macro...",
+    "status.run_complete": "Run complete",
+    "status.run_wait_on": "Run wait enabled",
+    "status.run_wait_off": "Run wait disabled",
+    "status.run_wait_armed": "Run wait armed. Press Run again to execute.",
+    "status.edit_on_short": "Edit mode on",
+    "status.edit_off_short": "Edit mode off",
+    "status.run_enabled": "Run enabled",
+    "status.run_disabled_edit": "Run disabled + edit mode",
+    "status.shortcut_assign": "Press a key to assign shortcut",
+    "status.shortcut_assigned": "Shortcut assigned",
+    "status.macro_loaded": "Macro loaded",
+    "status.macro_load_failed": "Failed to load macro file",
+    "status.ini_loaded": "Settings loaded from INI",
+    "status.ini_load_failed": "Failed to load INI",
+    "btn.on": "On",
+    "btn.off_edit": "Off / Edit",
+    "btn.edit": "Edit",
+    "btn.record": "Record",
+    "btn.run": "Run",
+    "btn.add_macro": "Add Macro",
+    "btn.delete_macro": "Delete Macro",
+    "btn.save_m": "Save .m",
+    "btn.load_m": "Load .m",
+    "btn.save_ini": "Save key_macro.ini",
+    "btn.load_ini": "Load key_macro.ini",
+    "section.macros": "Macros",
+    "section.recording": "Recording",
+    "section.shortcuts": "Shortcuts",
+    "section.files": "Files",
+    "section.actions": "Macro Actions",
+    "label.record": "[Record]",
+    "label.events": "Events",
+    "label.run_wait": "Run Wait",
+    "label.edit_mode": "Edit Mode",
+    "label.run_enabled": "Run Enabled",
+    "hint.recording": "Recording captures keyboard and mouse events while this page is focused.",
+    "hint.shortcuts": "Click a shortcut and press a key to assign.",
+    "shortcut.record": "Record Toggle",
+    "shortcut.run": "Run",
+    "shortcut.run_wait": "Run Wait Toggle",
+    "shortcut.edit": "Edit Toggle",
+    "shortcut.onoff": "On/Off Toggle",
+    "shortcut.set": "Set",
+    "shortcut.press_key": "Press a key...",
+    "state.on": "On",
+    "state.off": "Off",
+    "state.recording": "Recording",
+    "state.idle": "Idle",
+    "state.unassigned": "Unassigned",
+    "macro.label": "Macro",
+  },
+  ko: {
+    title: "매크로 프로그램",
+    language: "언어",
+    "status.ready": "대기 중",
+    "status.recording": "기록 중... Record를 다시 누르거나 단축키로 중지",
+    "status.recording_stopped": "기록 중지됨",
+    "status.run_disabled": "실행 비활성화됨 (Off/Edit)",
+    "status.edit_on": "편집 모드가 켜져 있습니다. 실행하려면 끄세요.",
+    "status.no_events": "실행할 기록이 없습니다",
+    "status.running": "매크로 실행 중...",
+    "status.run_complete": "실행 완료",
+    "status.run_wait_on": "실행 대기 켜짐",
+    "status.run_wait_off": "실행 대기 꺼짐",
+    "status.run_wait_armed": "실행 대기 준비됨. 다시 실행을 누르면 시작합니다.",
+    "status.edit_on_short": "편집 모드 켜짐",
+    "status.edit_off_short": "편집 모드 꺼짐",
+    "status.run_enabled": "실행 활성화됨",
+    "status.run_disabled_edit": "실행 비활성화 + 편집 모드",
+    "status.shortcut_assign": "단축키를 지정할 키를 누르세요",
+    "status.shortcut_assigned": "단축키가 지정되었습니다",
+    "status.macro_loaded": "매크로를 불러왔습니다",
+    "status.macro_load_failed": "매크로 파일 불러오기 실패",
+    "status.ini_loaded": "INI 설정을 불러왔습니다",
+    "status.ini_load_failed": "INI 불러오기 실패",
+    "btn.on": "On",
+    "btn.off_edit": "Off / 편집",
+    "btn.edit": "편집",
+    "btn.record": "기록",
+    "btn.run": "실행",
+    "btn.add_macro": "매크로 추가",
+    "btn.delete_macro": "매크로 삭제",
+    "btn.save_m": ".m 저장",
+    "btn.load_m": ".m 불러오기",
+    "btn.save_ini": "key_macro.ini 저장",
+    "btn.load_ini": "key_macro.ini 불러오기",
+    "section.macros": "매크로",
+    "section.recording": "기록",
+    "section.shortcuts": "단축키",
+    "section.files": "파일",
+    "section.actions": "매크로 동작",
+    "label.record": "[기록]",
+    "label.events": "이벤트",
+    "label.run_wait": "실행 대기",
+    "label.edit_mode": "편집 모드",
+    "label.run_enabled": "실행 가능",
+    "hint.recording": "이 페이지가 포커스일 때만 키보드/마우스가 기록됩니다.",
+    "hint.shortcuts": "단축키를 클릭하고 키를 눌러 지정하세요.",
+    "shortcut.record": "기록 토글",
+    "shortcut.run": "실행",
+    "shortcut.run_wait": "실행 대기 토글",
+    "shortcut.edit": "편집 토글",
+    "shortcut.onoff": "On/Off 토글",
+    "shortcut.set": "설정",
+    "shortcut.press_key": "키를 누르세요...",
+    "state.on": "On",
+    "state.off": "Off",
+    "state.recording": "기록 중",
+    "state.idle": "대기",
+    "state.unassigned": "미지정",
+    "macro.label": "매크로",
+  },
+};
+
 const state = {
   macros: [],
   selectedId: null,
@@ -10,6 +135,7 @@ const state = {
   runEnabled: true,
   awaitingShortcut: null,
   recordStart: 0,
+  language: "en",
   shortcuts: {
     recordToggle: "KeyR",
     runToggle: "KeyT",
@@ -28,6 +154,7 @@ function saveState() {
     runWait: state.runWait,
     editMode: state.editMode,
     runEnabled: state.runEnabled,
+    language: state.language,
     shortcuts: state.shortcuts,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -47,6 +174,7 @@ function loadState() {
     state.runWait = !!data.runWait;
     state.editMode = !!data.editMode;
     state.runEnabled = data.runEnabled !== false;
+    state.language = data.language || "en";
     state.shortcuts = { ...state.shortcuts, ...(data.shortcuts || {}) };
   } catch {
     state.macros = [{ id: crypto.randomUUID(), name: "Macro 1", events: [] }];
@@ -54,8 +182,25 @@ function loadState() {
   }
 }
 
+function t(key) {
+  return i18n[state.language]?.[key] || i18n.en[key] || key;
+}
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+  });
+  const select = $("#lang-select");
+  if (select) select.value = state.language;
+}
+
 function setStatus(text) {
   $("#status").textContent = text;
+}
+
+function macroDefaultName(idx) {
+  return `${t("macro.label")} ${idx + 1}`;
 }
 
 function getSelectedMacro() {
@@ -75,14 +220,14 @@ function renderMacros() {
     if (state.editMode) {
       const input = document.createElement("input");
       input.className = "macro-input";
-      input.value = macro.name || `Macro ${idx + 1}`;
+      input.value = macro.name || macroDefaultName(idx);
       input.addEventListener("change", () => {
-        macro.name = input.value.trim() || `Macro ${idx + 1}`;
+        macro.name = input.value.trim() || macroDefaultName(idx);
         saveState();
       });
       name.appendChild(input);
     } else {
-      name.textContent = macro.name || `Macro ${idx + 1}`;
+      name.textContent = macro.name || macroDefaultName(idx);
     }
 
     const meta = document.createElement("div");
@@ -105,11 +250,11 @@ function renderShortcuts() {
   const list = $("#shortcut-list");
   list.innerHTML = "";
   const items = [
-    { key: "recordToggle", label: "Record Toggle" },
-    { key: "runToggle", label: "Run" },
-    { key: "runWaitToggle", label: "Run Wait Toggle" },
-    { key: "editToggle", label: "Edit Toggle" },
-    { key: "onOffToggle", label: "On/Off Toggle" },
+    { key: "recordToggle", label: t("shortcut.record") },
+    { key: "runToggle", label: t("shortcut.run") },
+    { key: "runWaitToggle", label: t("shortcut.run_wait") },
+    { key: "editToggle", label: t("shortcut.edit") },
+    { key: "onOffToggle", label: t("shortcut.onoff") },
   ];
   items.forEach((item) => {
     const row = document.createElement("div");
@@ -123,10 +268,11 @@ function renderShortcuts() {
     key.textContent = formatKey(state.shortcuts[item.key]);
 
     const btn = document.createElement("button");
-    btn.textContent = state.awaitingShortcut === item.key ? "Press a key..." : "Set";
+    btn.textContent =
+      state.awaitingShortcut === item.key ? t("shortcut.press_key") : t("shortcut.set");
     btn.addEventListener("click", () => {
       state.awaitingShortcut = item.key;
-      setStatus("Press a key to assign shortcut");
+      setStatus(t("status.shortcut_assign"));
       renderShortcuts();
     });
 
@@ -138,21 +284,21 @@ function renderShortcuts() {
 }
 
 function formatKey(code) {
-  if (!code) return "Unassigned";
+  if (!code) return t("state.unassigned");
   if (code.startsWith("Key")) return code.replace("Key", "");
   if (code.startsWith("Digit")) return code.replace("Digit", "");
   return code;
 }
 
 function renderIndicators() {
-  $("#record-state").textContent = state.recording ? "Recording" : "Idle";
+  $("#record-state").textContent = state.recording ? t("state.recording") : t("state.idle");
   $("#event-count").textContent = getSelectedMacro()?.events?.length || 0;
-  $("#run-wait").textContent = state.runWait ? "On" : "Off";
-  $("#edit-mode").textContent = state.editMode ? "On" : "Off";
-  $("#run-enabled").textContent = state.runEnabled ? "On" : "Off";
+  $("#run-wait").textContent = state.runWait ? t("state.on") : t("state.off");
+  $("#edit-mode").textContent = state.editMode ? t("state.on") : t("state.off");
+  $("#run-enabled").textContent = state.runEnabled ? t("state.on") : t("state.off");
 
   const onOffBtn = $("#btn-onoff");
-  onOffBtn.textContent = state.runEnabled ? "On" : "Off / Edit";
+  onOffBtn.textContent = state.runEnabled ? t("btn.on") : t("btn.off_edit");
   onOffBtn.classList.toggle("active", state.runEnabled);
 
   $("#btn-edit").classList.toggle("active", state.editMode);
@@ -160,6 +306,7 @@ function renderIndicators() {
 }
 
 function render() {
+  applyI18n();
   renderMacros();
   renderShortcuts();
   renderIndicators();
@@ -167,7 +314,7 @@ function render() {
 
 function addMacro() {
   const id = crypto.randomUUID();
-  const name = `Macro ${state.macros.length + 1}`;
+  const name = macroDefaultName(state.macros.length);
   state.macros.push({ id, name, events: [] });
   state.selectedId = id;
   saveState();
@@ -189,7 +336,7 @@ function startRecording() {
   macro.events = [];
   state.recording = true;
   state.recordStart = performance.now();
-  setStatus("Recording... Click Record or press shortcut to stop");
+  setStatus(t("status.recording"));
   attachRecordListeners();
   renderIndicators();
 }
@@ -199,7 +346,7 @@ function stopRecording() {
   state.recording = false;
   detachRecordListeners();
   saveState();
-  setStatus("Recording stopped");
+  setStatus(t("status.recording_stopped"));
   renderIndicators();
 }
 
@@ -285,21 +432,21 @@ function detachRecordListeners() {
 
 function runMacro() {
   if (!state.runEnabled) {
-    setStatus("Run disabled (Off/Edit)");
+    setStatus(t("status.run_disabled"));
     return;
   }
   if (state.editMode) {
-    setStatus("Edit mode is on. Turn it off to run.");
+    setStatus(t("status.edit_on"));
     return;
   }
   const macro = getSelectedMacro();
   if (!macro || !macro.events.length) {
-    setStatus("No recorded events to run");
+    setStatus(t("status.no_events"));
     return;
   }
 
   state.running = true;
-  setStatus("Running macro...");
+  setStatus(t("status.running"));
 
   macro.events.forEach((evt) => {
     setTimeout(() => replayEvent(evt), evt.ts);
@@ -308,7 +455,7 @@ function runMacro() {
   const total = macro.events[macro.events.length - 1].ts;
   setTimeout(() => {
     state.running = false;
-    setStatus("Run complete");
+    setStatus(t("status.run_complete"));
   }, total + 20);
 }
 
@@ -336,7 +483,7 @@ function toggleRunWait() {
   state.runWait = !state.runWait;
   saveState();
   renderIndicators();
-  setStatus(`Run wait ${state.runWait ? "enabled" : "disabled"}`);
+  setStatus(state.runWait ? t("status.run_wait_on") : t("status.run_wait_off"));
 }
 
 function toggleEdit() {
@@ -346,7 +493,7 @@ function toggleEdit() {
   }
   saveState();
   render();
-  setStatus(`Edit mode ${state.editMode ? "on" : "off"}`);
+  setStatus(state.editMode ? t("status.edit_on_short") : t("status.edit_off_short"));
 }
 
 function toggleOnOff() {
@@ -359,7 +506,7 @@ function toggleOnOff() {
   }
   saveState();
   renderIndicators();
-  setStatus(state.runEnabled ? "Run enabled" : "Run disabled + edit mode");
+  setStatus(state.runEnabled ? t("status.run_enabled") : t("status.run_disabled_edit"));
 }
 
 function handleShortcutAssignment(e) {
@@ -368,7 +515,7 @@ function handleShortcutAssignment(e) {
   state.shortcuts[state.awaitingShortcut] = e.code;
   state.awaitingShortcut = null;
   saveState();
-  setStatus("Shortcut assigned");
+  setStatus(t("status.shortcut_assigned"));
   renderShortcuts();
   return true;
 }
@@ -384,7 +531,7 @@ function handleGlobalShortcuts(e) {
   if (e.code === shortcuts.runToggle) {
     e.preventDefault();
     if (state.runWait) {
-      setStatus("Run wait armed. Press Run again to execute.");
+      setStatus(t("status.run_wait_armed"));
       state.runWait = false;
       saveState();
       renderIndicators();
@@ -429,16 +576,16 @@ function loadMacroFile(file) {
       if (!data.macro) throw new Error("Invalid macro file");
       const macro = {
         id: crypto.randomUUID(),
-        name: data.macro.name || `Macro ${state.macros.length + 1}`,
+        name: data.macro.name || macroDefaultName(state.macros.length),
         events: data.macro.events || [],
       };
       state.macros.push(macro);
       state.selectedId = macro.id;
       saveState();
       render();
-      setStatus("Macro loaded");
+      setStatus(t("status.macro_loaded"));
     } catch {
-      setStatus("Failed to load macro file");
+      setStatus(t("status.macro_load_failed"));
     }
   };
   reader.readAsText(file);
@@ -479,9 +626,9 @@ function loadIniFile(file) {
       }
       saveState();
       render();
-      setStatus("Settings loaded from INI");
+      setStatus(t("status.ini_loaded"));
     } catch {
-      setStatus("Failed to load INI");
+      setStatus(t("status.ini_load_failed"));
     }
   };
   reader.readAsText(file);
@@ -529,6 +676,13 @@ function wireEvents() {
   $("#btn-save-ini").addEventListener("click", saveIniFile);
   $("#file-ini").addEventListener("change", (e) => loadIniFile(e.target.files[0]));
 
+  $("#lang-select").addEventListener("change", (e) => {
+    state.language = e.target.value;
+    saveState();
+    render();
+    setStatus(t("status.ready"));
+  });
+
   document.addEventListener("keydown", (e) => {
     if (handleShortcutAssignment(e)) return;
     handleGlobalShortcuts(e);
@@ -538,3 +692,4 @@ function wireEvents() {
 loadState();
 wireEvents();
 render();
+setStatus(t("status.ready"));

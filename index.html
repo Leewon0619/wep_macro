@@ -9,73 +9,82 @@
 <body>
   <div id="app">
     <header>
-      <h1>Macro Program</h1>
-      <div class="status" id="status">Ready</div>
+      <h1 data-i18n="title">Macro Program</h1>
+      <div class="header-right">
+        <label class="lang-select">
+          <span data-i18n="language">Language</span>
+          <select id="lang-select">
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+          </select>
+        </label>
+        <div class="status" id="status" data-i18n="status.ready">Ready</div>
+      </div>
     </header>
 
     <section class="controls">
-      <button id="btn-onoff" class="primary">On</button>
-      <button id="btn-edit">Edit</button>
-      <button id="btn-record">Record</button>
-      <button id="btn-run">Run</button>
-      <button id="btn-add">Add Macro</button>
-      <button id="btn-delete">Delete Macro</button>
+      <button id="btn-onoff" class="primary" data-i18n="btn.on">On</button>
+      <button id="btn-edit" data-i18n="btn.edit">Edit</button>
+      <button id="btn-record" data-i18n="btn.record">Record</button>
+      <button id="btn-run" data-i18n="btn.run">Run</button>
+      <button id="btn-add" data-i18n="btn.add_macro">Add Macro</button>
+      <button id="btn-delete" data-i18n="btn.delete_macro">Delete Macro</button>
     </section>
 
     <section class="layout">
       <div class="panel">
-        <h2>Macros</h2>
+        <h2 data-i18n="section.macros">Macros</h2>
         <div id="macro-list" class="macro-list"></div>
       </div>
 
       <div class="panel">
-        <h2>Recording</h2>
+        <h2 data-i18n="section.recording">Recording</h2>
         <div class="row">
-          <div class="label">[Record]</div>
+          <div class="label" data-i18n="label.record">[Record]</div>
           <div class="value" id="record-state">Idle</div>
         </div>
         <div class="row">
-          <div class="label">Events</div>
+          <div class="label" data-i18n="label.events">Events</div>
           <div class="value" id="event-count">0</div>
         </div>
-        <p class="hint">Recording captures keyboard and mouse events while this page is focused.</p>
+        <p class="hint" data-i18n="hint.recording">Recording captures keyboard and mouse events while this page is focused.</p>
       </div>
 
       <div class="panel">
-        <h2>Shortcuts</h2>
+        <h2 data-i18n="section.shortcuts">Shortcuts</h2>
         <div class="shortcut-list" id="shortcut-list"></div>
-        <p class="hint">Click a shortcut and press a key to assign.</p>
+        <p class="hint" data-i18n="hint.shortcuts">Click a shortcut and press a key to assign.</p>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Files</h2>
+      <h2 data-i18n="section.files">Files</h2>
       <div class="files">
-        <button id="btn-save-m">Save .m</button>
+        <button id="btn-save-m" data-i18n="btn.save_m">Save .m</button>
         <label class="file-btn">
-          Load .m
+          <span data-i18n="btn.load_m">Load .m</span>
           <input type="file" id="file-m" accept=".m,application/json" />
         </label>
-        <button id="btn-save-ini">Save key_macro.ini</button>
+        <button id="btn-save-ini" data-i18n="btn.save_ini">Save key_macro.ini</button>
         <label class="file-btn">
-          Load key_macro.ini
+          <span data-i18n="btn.load_ini">Load key_macro.ini</span>
           <input type="file" id="file-ini" accept=".ini,text/plain" />
         </label>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Macro Actions</h2>
+      <h2 data-i18n="section.actions">Macro Actions</h2>
       <div class="row">
-        <div class="label">Run Wait</div>
+        <div class="label" data-i18n="label.run_wait">Run Wait</div>
         <div class="value" id="run-wait">Off</div>
       </div>
       <div class="row">
-        <div class="label">Edit Mode</div>
+        <div class="label" data-i18n="label.edit_mode">Edit Mode</div>
         <div class="value" id="edit-mode">Off</div>
       </div>
       <div class="row">
-        <div class="label">Run Enabled</div>
+        <div class="label" data-i18n="label.run_enabled">Run Enabled</div>
         <div class="value" id="run-enabled">On</div>
       </div>
     </section>
