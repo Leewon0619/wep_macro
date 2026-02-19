@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly HookService _hookService = new();
     private readonly PlaybackService _playbackService = new();
     private readonly StorageService _storage = new();
+    private readonly NativeBridgeService _bridge = new();
     private readonly DispatcherTimer _runTimer = new();
     private readonly DispatcherTimer _coordTimer = new();
     private readonly Stopwatch _recordWatch = new();
@@ -47,6 +48,9 @@ public partial class MainWindow : Window
         _hookService.OnMacroEvent += HookService_OnMacroEvent;
         _hookService.OnLog += HookService_OnLog;
         _hookService.Start();
+
+        _bridge.OnMessage += Bridge_OnMessage;
+        _bridge.Start();
 
         _runTimer.Interval = TimeSpan.FromMilliseconds(50);
         _runTimer.Tick += (_, _) => UpdateRunTime();
@@ -191,67 +195,13 @@ public partial class MainWindow : Window
 
     private void Record_Click(object sender, RoutedEventArgs e)
     {
-        if (_recording)
-        {
-            _recording = false;
-            _recordWatch.Stop();
-            StatusText.Text = "Recording stopped";
-        }
-        else
-        {
-            if (CurrentMacro == null) return;
-            CurrentMacro.Events.Clear();
-            _recording = true;
-            _recordWatch.Restart();
-            StatusText.Text = "Recording...";
-        }
-        UpdateUI();
+        if (_recording) StopRecording();
+        else StartRecording();
     }
 
     private async void Run_Click(object sender, RoutedEventArgs e)
     {
-        if (_running)
-        {
-            StopRun();
-            return;
-        }
-
-        if (!_runEnabled)
-        {
-            StatusText.Text = "Run disabled";
-            return;
-        }
-        if (_editMode)
-        {
-            StatusText.Text = "Edit mode enabled";
-            return;
-        }
-        if (CurrentMacro == null || CurrentMacro.Events.Count == 0)
-        {
-            StatusText.Text = "No events to run";
-            return;
-        }
-
-        if (!int.TryParse(RepeatCountBox.Text, out var repeatCount)) repeatCount = 1;
-        repeatCount = Math.Max(0, repeatCount);
-
-        _running = true;
-        _runCts = new CancellationTokenSource();
-        _runStopwatch.Restart();
-        _runTimer.Start();
-        UpdateUI();
-
-        try
-        {
-            await _playbackService.RunAsync(CurrentMacro, repeatCount, msg => StatusText.Text = msg, _runCts.Token);
-        }
-        catch (TaskCanceledException)
-        {
-        }
-        finally
-        {
-            StopRun();
-        }
+        await RunMacroAsync();
     }
 
     private void StopRun()
@@ -302,25 +252,12 @@ public partial class MainWindow : Window
 
     private void CoordMode_Click(object sender, RoutedEventArgs e)
     {
-        _coordMode = !_coordMode;
-        if (_coordMode)
-        {
-            _coordTimer.Start();
-            StatusText.Text = "Coord mode on";
-        }
-        else
-        {
-            _coordTimer.Stop();
-            StatusText.Text = "Coord mode off";
-        }
-        UpdateUI();
+        ToggleCoordMode();
     }
 
     private void LogMode_Click(object sender, RoutedEventArgs e)
     {
-        _logMode = !_logMode;
-        StatusText.Text = _logMode ? "Log mode on" : "Log mode off";
-        UpdateUI();
+        ToggleLogMode();
     }
 
     private void ClearLog_Click(object sender, RoutedEventArgs e)
@@ -450,10 +387,124 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        _bridge.Dispose();
         _hookService.Dispose();
         _runCts?.Cancel();
         UnregisterHotkeys();
         _hwndSource?.RemoveHook(WndProc);
         base.OnClosed(e);
+    }
+
+    private void StartRecording()
+    {
+        if (CurrentMacro == null) return;
+        CurrentMacro.Events.Clear();
+        _recording = true;
+        _recordWatch.Restart();
+        StatusText.Text = "Recording...";
+        UpdateUI();
+    }
+
+    private void StopRecording()
+    {
+        _recording = false;
+        _recordWatch.Stop();
+        StatusText.Text = "Recording stopped";
+        UpdateUI();
+    }
+
+    private async Task RunMacroAsync(int? repeatOverride = null, Macro? overrideMacro = null)
+    {
+        if (_running)
+        {
+            StopRun();
+            return;
+        }
+        if (!_runEnabled)
+        {
+            StatusText.Text = "Run disabled";
+            return;
+        }
+        if (_editMode)
+        {
+            StatusText.Text = "Edit mode enabled";
+            return;
+        }
+
+        var macro = overrideMacro ?? CurrentMacro;
+        if (macro == null || macro.Events.Count == 0)
+        {
+            StatusText.Text = "No events to run";
+            return;
+        }
+
+        var repeatCount = repeatOverride ?? (int.TryParse(RepeatCountBox.Text, out var repeat) ? repeat : 1);
+        repeatCount = Math.Max(0, repeatCount);
+
+        _running = true;
+        _runCts = new CancellationTokenSource();
+        _runStopwatch.Restart();
+        _runTimer.Start();
+        UpdateUI();
+
+        try
+        {
+            await _playbackService.RunAsync(macro, repeatCount, msg => StatusText.Text = msg, _runCts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        finally
+        {
+            StopRun();
+        }
+    }
+
+    private void ToggleCoordMode()
+    {
+        _coordMode = !_coordMode;
+        if (_coordMode)
+        {
+            _coordTimer.Start();
+            StatusText.Text = "Coord mode on";
+        }
+        else
+        {
+            _coordTimer.Stop();
+            StatusText.Text = "Coord mode off";
+        }
+        UpdateUI();
+    }
+
+    private void ToggleLogMode()
+    {
+        _logMode = !_logMode;
+        StatusText.Text = _logMode ? "Log mode on" : "Log mode off";
+        UpdateUI();
+    }
+
+    private void Bridge_OnMessage(BridgeMessage msg)
+    {
+        Dispatcher.Invoke(async () =>
+        {
+            switch (msg.Type)
+            {
+                case "recordStart":
+                    StartRecording();
+                    break;
+                case "recordStop":
+                    StopRecording();
+                    break;
+                case "run":
+                    await RunMacroAsync(msg.Repeat, msg.Macro);
+                    break;
+                case "coordToggle":
+                    if (msg.Value != _coordMode) ToggleCoordMode();
+                    break;
+                case "logToggle":
+                    if (msg.Value != _logMode) ToggleLogMode();
+                    break;
+            }
+        });
     }
 }

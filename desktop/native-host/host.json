@@ -1,0 +1,9 @@
+{
+  "name": "com.wep_macro.host",
+  "description": "Wep Macro native messaging host",
+  "path": "C:\\WepMacro\\WepMacroHost.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://REPLACE_WITH_EXTENSION_ID/"
+  ]
+}
